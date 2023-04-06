@@ -1,0 +1,71 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:AvaloniaApplication1.ViewModels"
+		xmlns:m ="using:AvaloniaApplication1.Models"
+		xmlns:i ="clr-namespace:Avalonia.Xaml.Interactivity;assembly=Avalonia.Xaml.Interactivity"
+		xmlns:ia="clr-namespace:Avalonia.Xaml.Interactions.Core;assembly=Avalonia.Xaml.Interactions"
+	    x:Name="SelectFilesForm"
+	    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+	    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+	    mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+	    x:Class="AvaloniaApplication1.Views.MainWindow"
+	    Icon="/Assets/avalonia-logo.ico"
+	    Title="AvaloniaApplication1"
+	    MaxWidth="390"
+	    MaxHeight="440">
+	<Window.DataContext>
+		<vm:MainWindowViewModel/>
+	</Window.DataContext>
+
+	<Grid RowDefinitions="40,*,30">
+		<StackPanel>
+			<Button Width="25" Height="25" Margin="5,5,0,0" Command="{Binding GoBackFolder}">
+				<Button.Template>
+					<ControlTemplate>
+						<Image Source="/Assets/ProvArrowLeft.png"/>
+					</ControlTemplate>
+				</Button.Template>
+			</Button>
+			<TextBox Margin="5" Height="10" VerticalAlignment="Top"
+					 Text="{Binding FileTree.Path}" IsReadOnly="True"/>
+		</StackPanel>
+
+		<ListBox Grid.Row="1" BorderThickness="1" Width="380" Height="320" Margin="0,10,0,0"
+				 Items="{Binding FileTree.Children}">
+			<i:Interaction.Behaviors>
+				<ia:EventTriggerBehavior EventName="DoubleTapped">
+					<ia:InvokeCommandAction Command="{Binding GoToFolder}"
+											CommandParameter="{Binding RelativeSource={RelativeSource Self}, Path=SelectedItem}"/>
+				</ia:EventTriggerBehavior>
+			</i:Interaction.Behaviors>
+			<ListBox.ItemTemplate>
+				<DataTemplate>
+					<StackPanel Orientation="Horizontal" Height="25">
+						<CheckBox IsThreeState="False" IsChecked="{Binding IsChecked, Mode=TwoWay}"/>
+						<Image Margin="0,0,0,0" VerticalAlignment="Bottom" Height="25">
+							<Image.Source>
+								<MultiBinding Converter="{x:Static vm:MainWindowViewModel.FileIconConverter}">
+									<Binding Path="IsDirectory"/>
+									<Binding Path="IsExpanded"/>
+								</MultiBinding>
+							</Image.Source>
+						</Image>
+						<Label Content="{Binding Name}" VerticalAlignment="Stretch"/>
+					</StackPanel>
+				</DataTemplate>
+			</ListBox.ItemTemplate>
+		</ListBox>
+
+		<StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="10"
+					HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,5,10">
+			<Button Width="100" Height="30" Content="ОК"
+                    HorizontalContentAlignment="Center"
+					Command="{Binding OkCommand}"
+					CommandParameter="{Binding ElementName=SelectFilesForm}"/>
+			<Button Width="100" Height="30" Content="Отмена"
+                    HorizontalContentAlignment="Center"
+					Command="{Binding CancelCommand}"
+					CommandParameter="{Binding ElementName=SelectFilesForm}"/>
+		</StackPanel>
+	</Grid>
+</Window>
