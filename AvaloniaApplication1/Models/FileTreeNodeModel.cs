@@ -24,9 +24,10 @@ namespace AvaloniaApplication1.Models
         private string _version;
         private string? _hashSum;
         private bool _isChecked;
+        private string _watchedFolderPath;
         #endregion
 
-        public bool IsChecked 
+        public bool IsChecked
         {
             get => _isChecked;
             set
@@ -139,7 +140,10 @@ namespace AvaloniaApplication1.Models
             _watcher = new FileSystemWatcher
             {
                 Path = Path,
-                NotifyFilter = NotifyFilters.FileName | NotifyFilters.Size | NotifyFilters.LastWrite| NotifyFilters.DirectoryName,
+                NotifyFilter = NotifyFilters.FileName | 
+                               NotifyFilters.Size | 
+                               NotifyFilters.LastWrite | 
+                               NotifyFilters.DirectoryName,
                 IncludeSubdirectories = true,
                 EnableRaisingEvents = true,
             };
@@ -148,7 +152,6 @@ namespace AvaloniaApplication1.Models
             _watcher.Created += OnCreated;
             _watcher.Deleted += OnDeleted;
             _watcher.Renamed += OnRenamed;
-            _watcher.EnableRaisingEvents = true;
 
             if (result.Count == 0)
                 HasChildren = false;
@@ -171,8 +174,8 @@ namespace AvaloniaApplication1.Models
                             return 1;
                         break;
                 }
-                return x.IsDirectory == y.IsDirectory 
-                        ? Comparer<T>.Default.Compare(selector(x), selector(y)) 
+                return x.IsDirectory == y.IsDirectory
+                        ? Comparer<T>.Default.Compare(selector(x), selector(y))
                         : x.IsDirectory ? -1 : 1;
             };
         }
@@ -192,8 +195,8 @@ namespace AvaloniaApplication1.Models
                             return -1;
                         break;
                 }
-                return x.IsDirectory == y.IsDirectory 
-                        ? Comparer<T>.Default.Compare(selector(y), selector(x)) 
+                return x.IsDirectory == y.IsDirectory
+                        ? Comparer<T>.Default.Compare(selector(y), selector(x))
                         : x.IsDirectory ? -1 : 1;
             };
         }
@@ -201,6 +204,8 @@ namespace AvaloniaApplication1.Models
         private void OnChanged(object sender, FileSystemEventArgs e)
         {
             //var a = File.Exists(e.FullPath);
+
+
             if (e.ChangeType == WatcherChangeTypes.Changed && Directory.Exists(e.FullPath))
             {
                 Dispatcher.UIThread.Post(() =>
@@ -225,10 +230,15 @@ namespace AvaloniaApplication1.Models
 
         private void OnCreated(object sender, FileSystemEventArgs e)
         {
-            Dispatcher.UIThread.Post(() =>
+            //Dispatcher.UIThread.Post(() =>
+            //{
+            object _lock = new object();
+            lock(_lock)
             {
-                try
+                if (Directory.Exists(e.FullPath) || File.Exists(e.FullPath))
                 {
+                    var file = this;
+                    var df = e.Name;
                     var node = new FileTreeNodeModel(
                         e.FullPath,
                         File.GetAttributes(e.FullPath).HasFlag(FileAttributes.Directory),
@@ -240,11 +250,9 @@ namespace AvaloniaApplication1.Models
                         _children!.Add(node);
                     }
                 }
-                catch
-                {
+            }
 
-                }
-            });
+            //});
         }
 
         private void OnDeleted(object sender, FileSystemEventArgs e)
@@ -265,18 +273,20 @@ namespace AvaloniaApplication1.Models
 
         private void OnRenamed(object sender, RenamedEventArgs e)
         {
-            Dispatcher.UIThread.Post(() =>
+            //Dispatcher.UIThread.Post(() =>
+            //{
+            foreach (var child in _children!)
             {
-                foreach (var child in _children!)
+                if (child.Path == e.OldFullPath)
                 {
-                    if (child.Path == e.OldFullPath)
-                    {
-                        child.Path = e.FullPath;
-                        child.Name = e.Name ?? string.Empty;
-                        break;
-                    }
+                    child.Path = e.FullPath;
+                    child.Name = e.Name ?? string.Empty;
+                    //_watchedFolderPath = child.Path;
+                    break;
                 }
-            });
+  
+                //});
+            }
         }
     }
 }
