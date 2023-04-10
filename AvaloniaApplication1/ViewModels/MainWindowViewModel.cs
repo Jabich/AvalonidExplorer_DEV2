@@ -5,6 +5,7 @@ using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using AvaloniaApplication1.Helper;
 using AvaloniaApplication1.Models;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using ReactiveUI;
 using System;
 using System.IO;
@@ -15,12 +16,12 @@ namespace AvaloniaApplication1.ViewModels
     {
         private static readonly string rootFolder = "D:\\";
         private static IconConverter? s_iconConverter;
-        private FileTreeNodeModel? _fileTree;
+        private static FileTreeNodeModel? _fileTree;
 
-        public FileTreeNodeModel? FileTree 
-        { 
+        public FileTreeNodeModel? FileTree
+        {
             get => _fileTree;
-            set => this.RaiseAndSetIfChanged(ref _fileTree, value); 
+            set => this.RaiseAndSetIfChanged(ref _fileTree, value);
         }
         public static IMultiValueConverter FileIconConverter
         {
@@ -69,6 +70,18 @@ namespace AvaloniaApplication1.ViewModels
         public void OkCommand(Window window)
         {
             window.Close();
+        }
+
+        #endregion
+
+        #region METHODS
+        private static FileTreeNodeModel CheckParents(FileTreeNodeModel fileTree)
+        {
+            return Directory.Exists(fileTree.Parent.Path) ? fileTree.Parent : CheckParents(fileTree.Parent);
+        }
+        public static void TEST(FileTreeNodeModel parent)
+        {
+            //FileTree = parent;
         }
         #endregion
     }

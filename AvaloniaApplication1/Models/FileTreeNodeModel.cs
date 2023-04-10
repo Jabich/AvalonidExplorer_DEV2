@@ -1,5 +1,6 @@
 ﻿using Avalonia.Controls.Shapes;
 using Avalonia.Threading;
+using AvaloniaApplication1.ViewModels;
 using ReactiveUI;
 using System;
 using System.Collections.Generic;
@@ -24,7 +25,6 @@ namespace AvaloniaApplication1.Models
         private string _version;
         private string? _hashSum;
         private bool _isChecked;
-        private string _watchedFolderPath;
         #endregion
 
         public bool IsChecked
@@ -100,21 +100,28 @@ namespace AvaloniaApplication1.Models
             HasChildren = isDirectory;
             _isChecked = false;
             Parent = parent;
-
-            if (!IsDirectory)
+            try
             {
-                _version = string.IsNullOrEmpty(FileVersionInfo.GetVersionInfo(Path).ProductVersion!)
-                    ? "-"
-                    : FileVersionInfo.GetVersionInfo(Path).ProductVersion!;
+                if (!IsDirectory)
+                {
+                    _version = string.IsNullOrEmpty(FileVersionInfo.GetVersionInfo(Path).ProductVersion!)
+                        ? "-"
+                        : FileVersionInfo.GetVersionInfo(Path).ProductVersion!;
 
-                var info = new FileInfo(path);
-                Size = info.Length;
-                Modified = info.LastWriteTimeUtc;
+                    var info = new FileInfo(path);
+                    Size = info.Length;
+                    Modified = info.LastWriteTimeUtc;
+                }
+                else
+                {
+                    _version = "-";
+                }
             }
-            else
+            catch
             {
-                _version = "-";
+
             }
+
         }
 
         private ObservableCollection<FileTreeNodeModel> LoadChildren()
@@ -140,9 +147,9 @@ namespace AvaloniaApplication1.Models
             _watcher = new FileSystemWatcher
             {
                 Path = Path,
-                NotifyFilter = NotifyFilters.FileName | 
-                               NotifyFilters.Size | 
-                               NotifyFilters.LastWrite | 
+                NotifyFilter = NotifyFilters.FileName |
+                               NotifyFilters.Size |
+                               NotifyFilters.LastWrite |
                                NotifyFilters.DirectoryName,
                 IncludeSubdirectories = true,
                 EnableRaisingEvents = true,
@@ -230,63 +237,75 @@ namespace AvaloniaApplication1.Models
 
         private void OnCreated(object sender, FileSystemEventArgs e)
         {
-            //Dispatcher.UIThread.Post(() =>
-            //{
-            object _lock = new object();
-            lock(_lock)
-            {
-                if (Directory.Exists(e.FullPath) || File.Exists(e.FullPath))
-                {
-                    var file = this;
-                    var df = e.Name;
-                    var node = new FileTreeNodeModel(
-                        e.FullPath,
-                        File.GetAttributes(e.FullPath).HasFlag(FileAttributes.Directory),
-                        //Directory.Exists(e.FullPath),
-                        this);
-                    if (_path == System.IO.Path.GetDirectoryName(node.Path))
-                    {
-                        node.IsChecked = node.Parent.IsChecked;
-                        _children!.Add(node);
-                    }
-                }
-            }
-
-            //});
-        }
-
-        private void OnDeleted(object sender, FileSystemEventArgs e)
-        {
             Dispatcher.UIThread.Post(() =>
             {
-                for (var i = 0; i < _children!.Count; ++i)
+                var correctPath = System.IO.Path.Combine(Path, e.Name);
+                if (Directory.Exists(correctPath) || File.Exists(correctPath))
                 {
-                    if (_children[i].Path == e.FullPath)
+                    var file = this;
+                    var node = new FileTreeNodeModel(
+                        correctPath,
+                        File.GetAttributes(correctPath).HasFlag(FileAttributes.Directory),
+                        //Directory.Exists(e.FullPath),
+                        this);
+                    if (Parent != null)
                     {
-                        _children.RemoveAt(i);
-                        Debug.WriteLine($"Removed {e.FullPath}");
-                        break;
+                        HasChildren = true;
+                    }
+
+                    if (_path == System.IO.Path.GetDirectoryName(node.Path))
+                    {
+                        node.IsChecked = node.Parent.IsChecked == null ? false : node.Parent.IsChecked;
+                        _children!.Add(node);
+
                     }
                 }
             });
         }
 
-        private void OnRenamed(object sender, RenamedEventArgs e)
+        private void OnDeleted(object sender, FileSystemEventArgs e)
         {
+            var fileTree = App.viewModel.FileTree;
+
             //Dispatcher.UIThread.Post(() =>
             //{
-            foreach (var child in _children!)
+            for (var i = 0; i < _children!.Count; ++i)
             {
-                if (child.Path == e.OldFullPath)
+                if (_children[i].Path == System.IO.Path.Combine(Path, e.Name))
                 {
-                    child.Path = e.FullPath;
-                    child.Name = e.Name ?? string.Empty;
-                    //_watchedFolderPath = child.Path;
+                    _children.RemoveAt(i);
+                    if(fileTree.Path.Length > System.IO.Path.Combine(Path, e.Name).Length)
+                    {
+                        App.viewModel.FileTree = this;
+                    }
+                    Debug.WriteLine($"Removed {e.FullPath}");
                     break;
                 }
-  
-                //});
             }
+            //});
+        }
+
+        private void OnRenamed(object sender, RenamedEventArgs e)
+        {
+            Dispatcher.UIThread.Post(() =>
+            {
+                foreach (var child in _children!)
+                {
+                    if (child.Path == System.IO.Path.Combine(Path, e.OldName))
+                    {
+                        child.Path = System.IO.Path.Combine(Path, e.Name);
+                        child.Name = e.Name ?? string.Empty;
+                    }
+
+                    //if (child.Path == e.OldFullPath)
+                    //{
+                    //    child.Path = e.FullPath;
+                    //    child.Name = e.Name ?? string.Empty;
+                    //    //_watchedFolderPath = child.Path;
+                    //    break;
+                    //}
+                }
+            });
         }
     }
 }
