@@ -246,7 +246,6 @@ namespace AvaloniaApplication1.Models
                     var node = new FileTreeNodeModel(
                         correctPath,
                         File.GetAttributes(correctPath).HasFlag(FileAttributes.Directory),
-                        //Directory.Exists(e.FullPath),
                         this);
                     if (Parent != null)
                     {
@@ -265,24 +264,24 @@ namespace AvaloniaApplication1.Models
 
         private void OnDeleted(object sender, FileSystemEventArgs e)
         {
-            var fileTree = App.viewModel.FileTree;
+            var openedFolder = FileTree.GetOpenedFolder();
 
-            //Dispatcher.UIThread.Post(() =>
-            //{
-            for (var i = 0; i < _children!.Count; ++i)
+            Dispatcher.UIThread.Post(() =>
             {
-                if (_children[i].Path == System.IO.Path.Combine(Path, e.Name))
+                for (var i = 0; i < _children!.Count; ++i)
                 {
-                    _children.RemoveAt(i);
-                    if(fileTree.Path.Length > System.IO.Path.Combine(Path, e.Name).Length)
+                    if (_children[i].Path == System.IO.Path.Combine(Path, e.Name))
                     {
-                        App.viewModel.FileTree = this;
+                        _children.RemoveAt(i);
+                        if (openedFolder.Path.Length >= System.IO.Path.Combine(Path, e.Name).Length)
+                        {
+                            MainWindowViewModel.OpenedFolder.ReturnToExistingFolder(this);
+                        }
+                        Debug.WriteLine($"Removed {e.FullPath}");
+                        break;
                     }
-                    Debug.WriteLine($"Removed {e.FullPath}");
-                    break;
                 }
-            }
-            //});
+            });
         }
 
         private void OnRenamed(object sender, RenamedEventArgs e)
@@ -296,14 +295,6 @@ namespace AvaloniaApplication1.Models
                         child.Path = System.IO.Path.Combine(Path, e.Name);
                         child.Name = e.Name ?? string.Empty;
                     }
-
-                    //if (child.Path == e.OldFullPath)
-                    //{
-                    //    child.Path = e.FullPath;
-                    //    child.Name = e.Name ?? string.Empty;
-                    //    //_watchedFolderPath = child.Path;
-                    //    break;
-                    //}
                 }
             });
         }

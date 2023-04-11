@@ -19,7 +19,7 @@
 
 	<Grid RowDefinitions="40,*,30">
 		<StackPanel>
-			<Button Width="25" Height="25" Margin="5,5,0,0" Command="{Binding GoBackFolder}">
+			<Button Width="25" Height="25" Margin="5,5,0,0" Command="{Binding GoBackFolderCommand}">
 				<Button.Template>
 					<ControlTemplate>
 						<Image Source="/Assets/ProvArrowLeft.png"/>
@@ -27,14 +27,14 @@
 				</Button.Template>
 			</Button>
 			<TextBox Margin="5" Height="10" VerticalAlignment="Top"
-					 Text="{Binding FileTree.Path}" IsReadOnly="True"/>
+					 Text="{Binding FileTree.OpenedFolder.Path}" IsReadOnly="True"/>
 		</StackPanel>
 
 		<ListBox Grid.Row="1" BorderThickness="1" Width="380" Height="320" Margin="0,10,0,0"
-				 Items="{Binding FileTree.Children}">
+				 Items="{Binding FileTree.OpenedFolder.Children}">
 			<i:Interaction.Behaviors>
 				<ia:EventTriggerBehavior EventName="DoubleTapped">
-					<ia:InvokeCommandAction Command="{Binding GoToFolder}"
+					<ia:InvokeCommandAction Command="{Binding GoToFolderCommand}"
 											CommandParameter="{Binding RelativeSource={RelativeSource Self}, Path=SelectedItem}"/>
 				</ia:EventTriggerBehavior>
 			</i:Interaction.Behaviors>

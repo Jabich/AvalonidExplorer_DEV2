@@ -14,15 +14,14 @@ namespace AvaloniaApplication1.ViewModels
 {
     public class MainWindowViewModel : ViewModelBase
     {
-        private static readonly string rootFolder = "D:\\";
         private static IconConverter? s_iconConverter;
-        private static FileTreeNodeModel? _fileTree;
+        private static FileTree _fileTree = new FileTree();
 
-        public FileTreeNodeModel? FileTree
-        {
-            get => _fileTree;
-            set => this.RaiseAndSetIfChanged(ref _fileTree, value);
-        }
+        #region PROPERTIES
+        public static FileTree OpenedFolder { get => _fileTree; }
+
+        public FileTree FileTree { get { return _fileTree; }  set { this.RaiseAndSetIfChanged(ref _fileTree, value); } }
+
         public static IMultiValueConverter FileIconConverter
         {
             get
@@ -42,25 +41,21 @@ namespace AvaloniaApplication1.ViewModels
                 return s_iconConverter;
             }
         }
-
-        public MainWindowViewModel()
-        {
-            FileTree = new FileTreeNodeModel(rootFolder, Directory.Exists(rootFolder));
-        }
+        #endregion
 
         #region COMMANDS
-        public void GoToFolder(FileTreeNodeModel selectedFile)
+        public void GoToFolderCommand(FileTreeNodeModel selectedFile)
         {
             if (selectedFile != null && Directory.Exists(selectedFile.Path))
             {
-                FileTree = selectedFile;
+                FileTree.GoToFolder(selectedFile);
             }
         }
-        public void GoBackFolder()
+        public void GoBackFolderCommand()
         {
-            if (FileTree != null && FileTree.Parent != null)
+            if (FileTree.OpenedFolder != null && FileTree.OpenedFolder.Parent != null)
             {
-                FileTree = FileTree.Parent;
+                FileTree.GoBackFolder();
             }
         }
         public void CancelCommand(Window window)
@@ -72,17 +67,6 @@ namespace AvaloniaApplication1.ViewModels
             window.Close();
         }
 
-        #endregion
-
-        #region METHODS
-        private static FileTreeNodeModel CheckParents(FileTreeNodeModel fileTree)
-        {
-            return Directory.Exists(fileTree.Parent.Path) ? fileTree.Parent : CheckParents(fileTree.Parent);
-        }
-        public static void TEST(FileTreeNodeModel parent)
-        {
-            //FileTree = parent;
-        }
         #endregion
     }
 }

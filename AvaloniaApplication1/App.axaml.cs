@@ -21,7 +21,6 @@ namespace AvaloniaApplication1
                 desktop.MainWindow = new MainWindow
                 {
                     DataContext = viewModel,
-                    
                 };
             }
             base.OnFrameworkInitializationCompleted();
