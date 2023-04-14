@@ -8,9 +8,9 @@ namespace AvaloniaApplication1.Models
 {
     public class FileTree : ReactiveObject
     {
-        private string _rootFolder = "D:\\";
+        private string _rootFolder = "D:\\1\\rdfgdfg\\3";
         private static FileTreeNodeModel _openedFolder;
-        private FileSystemWatcher _watcher;
+        private static FileSystemWatcher _watcher;
 
         public FileTreeNodeModel OpenedFolder { get => _openedFolder; set => this.RaiseAndSetIfChanged(ref _openedFolder, value); }
 
@@ -26,6 +26,7 @@ namespace AvaloniaApplication1.Models
                                NotifyFilters.FileName |
                                NotifyFilters.DirectoryName |
                                NotifyFilters.Size,
+                InternalBufferSize = 60 * 1024,
             };
             _watcher.Created += CreatedFile;
             _watcher.Deleted += DeleteFile;
@@ -37,14 +38,13 @@ namespace AvaloniaApplication1.Models
         {
             string pathParentFolder = Path.GetDirectoryName(e.FullPath);
             var parent = SearchFile(pathParentFolder, OpenedFolder);
-            //if (!File.Exists(e.FullPath) && !Directory.Exists(e.FullPath))
             foreach (var item in parent.Children)
             {
-                if (item.Path == e.FullPath) 
+                if (item.Path == e.FullPath)
                     return;
             }
             parent.Children.Add(new FileTreeNodeModel(e.FullPath, Directory.Exists(e.FullPath), parent));
-
+            #region Test
             //if (OpenedFolder.Path.Length > Path.GetDirectoryName(e.FullPath).Length)
             //{
             //    SearchParentAndAddFile(e.FullPath, OpenedFolder);
@@ -80,18 +80,63 @@ namespace AvaloniaApplication1.Models
 
             //    }
             //}
+            #endregion
         }
         private void DeleteFile(object sender, FileSystemEventArgs e)
         {
+            var parentFolder = SearchFile(Path.GetDirectoryName(e.FullPath), OpenedFolder) ?? OpenedFolder;
+            try
+            {
+                foreach (var children in parentFolder.Children)
+                {
+                    if (children.Path == e.FullPath)
+                    {
+                        parentFolder.Children.Remove(children);
+                    }
+                }
+            }
+            catch
+            {
+                //if(parentFolder.Parent.Children != null && parentFolder.Parent.Children.Contains(parentFolder)) 
+                //parentFolder.Parent.Children.Remove(parentFolder);
+            }
 
         }
         private void RenamedFile(object sender, RenamedEventArgs e)
         {
+            try
+            {
+                var changedFile = SearchFile(e.OldFullPath, OpenedFolder);
+                if (changedFile.Parent.Path == _rootFolder || changedFile.Path == e.OldFullPath)
+                {
+                    changedFile.Path = e.FullPath;
+                    changedFile.Name = Path.GetFileName(e.FullPath);
+                    
+                }
+                else
+                {
+                    changedFile.Parent.Path = e.FullPath;
+                    changedFile.Parent.Name = Path.GetFileName(e.FullPath);
+                }
+       
 
+
+                ChangePathChildren(changedFile.Parent);
+            }
+            catch
+            {
+
+            }
         }
         private void ChangedFile(object sender, FileSystemEventArgs e)
         {
-
+            //var changedFile = SearchFile(e.FullPath, OpenedFolder);
+            //if (changedFile.Path == e.FullPath)
+            //{
+            //    var info = new FileInfo(e.FullPath);
+            //    changedFile.Size = info.Length;
+            //    changedFile.Modified = info.LastWriteTimeUtc;
+            //}
         }
 
         public void GoToFolder(FileTreeNodeModel selectedFile)
@@ -109,13 +154,16 @@ namespace AvaloniaApplication1.Models
             }
         }
         public static FileTreeNodeModel GetOpenedFolder()
-        {
+        { 
             return _openedFolder;
         }
         public void ReturnToExistingFolder(FileTreeNodeModel file)
         {
             OpenedFolder = file;
         }
+
+
+        //Старая реализация
         private void SearchParentAndAddFile(string addedFilePath, FileTreeNodeModel openedFolder = null)
         {
             string pathFolderToAddFile = Path.GetDirectoryName(addedFilePath);
@@ -132,6 +180,7 @@ namespace AvaloniaApplication1.Models
                 SearchParentAndAddFile(addedFilePath, openedFolder.Parent);
             }
         }
+        //========================
         private void SearchChildrenAndAddFile(string addedFilePath, FileTreeNodeModel openedFolder = null)
         {
             string pathFolderToAddFile = Path.GetDirectoryName(addedFilePath);
@@ -160,6 +209,8 @@ namespace AvaloniaApplication1.Models
                 SearchChildrenAndAddFile(addedFilePath, sdf);
             }
         }
+        //========================
+
 
         private FileTreeNodeModel SearchFile(string searchedFilePath, FileTreeNodeModel openFolder)
         {
@@ -169,16 +220,32 @@ namespace AvaloniaApplication1.Models
         }
         private FileTreeNodeModel GoUp(string searchedFilePath, FileTreeNodeModel openedFolder)
         {
-            //var children = openedFolder.Children.OrderByDescending(openedFolder => searchedFile.IndexOf(openedFolder.Path)).FirstOrDefault();
-            //var children = openedFolder.Children.FirstOrDefault(file => file.Path.IndexOf(searchedFile) == 0);
-
-            //var maxMatch = openedFolder.Children.OrderByDescending(openedFolder =>)
-            var maxMatchFile = openedFolder.Children.OrderByDescending(f => f.Path.Split(Path.DirectorySeparatorChar).Intersect(searchedFilePath.Split(Path.DirectorySeparatorChar)).Count()).FirstOrDefault();
-            return maxMatchFile.Path == searchedFilePath ? maxMatchFile : GoUp(searchedFilePath, maxMatchFile);
+            var maxMatchFile1 = openedFolder.Children.Where(x => searchedFilePath.StartsWith(x.Path)).OrderByDescending(x => x.Path.Length).FirstOrDefault();
+            //var maxMatchFile = openedFolder.Children.OrderByDescending(f => f.Path.Split(Path.DirectorySeparatorChar).Intersect(searchedFilePath.Split(Path.DirectorySeparatorChar)).Count()).FirstOrDefault();
+            try
+            {
+                return maxMatchFile1.Path == searchedFilePath ? maxMatchFile1 : GoUp(searchedFilePath, maxMatchFile1);
+            }
+            catch
+            {
+                return null;
+            }
         }
         private FileTreeNodeModel GoDown(string searchedFile, FileTreeNodeModel openedFolder)
         {
             return openedFolder.Parent.Path == searchedFile ? openedFolder : GoDown(searchedFile, openedFolder.Parent);
+        }
+        private void ChangePathChildren(FileTreeNodeModel changedFile)
+        {
+            foreach (var child in changedFile.Children)
+            {
+                child.Path = Path.Combine(changedFile.Path, child.Name);
+                if (Directory.Exists(child.Path))
+                {
+                    ChangePathChildren(child);
+                }
+
+            }
         }
 
     }

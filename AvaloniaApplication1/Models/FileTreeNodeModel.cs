@@ -63,17 +63,17 @@ namespace AvaloniaApplication1.Models
         public string Name
         {
             get => _name;
-            private set => this.RaiseAndSetIfChanged(ref _name, value);
+            set => this.RaiseAndSetIfChanged(ref _name, value);
         }
         public long? Size
         {
             get => _size;
-            private set => this.RaiseAndSetIfChanged(ref _size, value);
+            set => this.RaiseAndSetIfChanged(ref _size, value);
         }
         public DateTimeOffset? Modified
         {
             get => _modified;
-            private set => this.RaiseAndSetIfChanged(ref _modified, value);
+            set => this.RaiseAndSetIfChanged(ref _modified, value);
         }
         public bool HasChildren
         {
@@ -142,25 +142,6 @@ namespace AvaloniaApplication1.Models
             {
                 result.Add(new FileTreeNodeModel(f, false, this));
             }
-
-            //Тест через Using
-            //using (_watcher = new FileSystemWatcher())
-            //{
-            //    _watcher.Path = Path;
-            //    _watcher.NotifyFilter = NotifyFilters.FileName |
-            //                 NotifyFilters.Size |
-            //                 NotifyFilters.LastWrite |
-            //                 NotifyFilters.DirectoryName;
-            //    _watcher.IncludeSubdirectories = true;
-            //    _watcher.EnableRaisingEvents = true;
-
-            //    _watcher.Changed += OnChanged;
-            //    _watcher.Created += OnCreated;
-            //    _watcher.Deleted += OnDeleted;
-            //    _watcher.Renamed += OnRenamed;
-
-            //    Task.Delay(5000000);
-            //}
 
             _watcher = new FileSystemWatcher
             {
@@ -302,8 +283,8 @@ namespace AvaloniaApplication1.Models
 
         private void OnRenamed(object sender, RenamedEventArgs e)
         {
-            Dispatcher.UIThread.Post(() =>
-            {
+            //Dispatcher.UIThread.Post(() =>
+            //{
                 foreach (var child in _children!)
                 {
                     if (child.Path == System.IO.Path.Combine(Path, e.OldName))
@@ -312,7 +293,7 @@ namespace AvaloniaApplication1.Models
                         child.Name = e.Name ?? string.Empty;
                     }
                 }
-            });
+            //});
         }
     }
 }
