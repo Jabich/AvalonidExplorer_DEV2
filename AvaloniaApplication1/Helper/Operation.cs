@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace AvaloniaApplication1.Helper
 {
-    public enum Operations
+    public enum Operation
     {
-        AddFile,
+        CreateFile,
         ChangeNameFile,
         DeleteFile
     }

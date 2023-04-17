@@ -14,13 +14,15 @@ namespace AvaloniaApplication1.ViewModels
 {
     public class MainWindowViewModel : ViewModelBase
     {
+
+        public FileSystemWatcher FileSystemWatcher { get; set; }
         private static IconConverter? s_iconConverter;
         private static FileTree _fileTree = new FileTree();
 
         #region PROPERTIES
         public static FileTree OpenedFolder { get => _fileTree; }
 
-        public FileTree FileTree { get { return _fileTree; }  set { this.RaiseAndSetIfChanged(ref _fileTree, value); } }
+        public FileTree FileTree { get { return _fileTree; } set { this.RaiseAndSetIfChanged(ref _fileTree, value); } }
 
         public static IMultiValueConverter FileIconConverter
         {
@@ -64,7 +66,7 @@ namespace AvaloniaApplication1.ViewModels
         }
         public void OkCommand(Window window)
         {
-            window.Close();
+            FileTree.CheckGCWatcher();
         }
 
         #endregion

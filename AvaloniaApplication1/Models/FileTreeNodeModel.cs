@@ -13,6 +13,7 @@ namespace AvaloniaApplication1.Models
 {
     public class FileTreeNodeModel : ReactiveObject
     {
+        public static FileSystemWatcher _watcherSecond;
         #region FIELDS
         private string _path;
         private string _name;
@@ -119,7 +120,7 @@ namespace AvaloniaApplication1.Models
             }
             catch
             {
-
+               
             }
 
         }
