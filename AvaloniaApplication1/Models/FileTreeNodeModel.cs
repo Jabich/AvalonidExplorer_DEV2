@@ -19,7 +19,6 @@ namespace AvaloniaApplication1.Models
         private string _name;
         private long? _size;
         private DateTimeOffset? _modified;
-        private FileSystemWatcher? _watcher;
         private ObservableCollection<FileTreeNodeModel>? _children;
         private bool _hasChildren = true;
         private bool _isExpanded;
@@ -120,7 +119,7 @@ namespace AvaloniaApplication1.Models
             }
             catch
             {
-               
+
             }
 
         }
@@ -143,23 +142,6 @@ namespace AvaloniaApplication1.Models
             {
                 result.Add(new FileTreeNodeModel(f, false, this));
             }
-
-            _watcher = new FileSystemWatcher
-            {
-                Path = Path,
-                NotifyFilter = NotifyFilters.FileName |
-                               NotifyFilters.Size |
-                               NotifyFilters.LastWrite |
-                               NotifyFilters.DirectoryName,
-                //IncludeSubdirectories = true,
-                //EnableRaisingEvents = true,
-            };
-
-            _watcher.Changed += OnChanged;
-            _watcher.Created += OnCreated;
-            _watcher.Deleted += OnDeleted;
-            _watcher.Renamed += OnRenamed;
-
             if (result.Count == 0)
                 HasChildren = false;
 
@@ -206,95 +188,6 @@ namespace AvaloniaApplication1.Models
                         ? Comparer<T>.Default.Compare(selector(y), selector(x))
                         : x.IsDirectory ? -1 : 1;
             };
-        }
-
-        private void OnChanged(object sender, FileSystemEventArgs e)
-        {
-            //var a = File.Exists(e.FullPath);
-
-
-            if (e.ChangeType == WatcherChangeTypes.Changed && Directory.Exists(e.FullPath))
-            {
-                Dispatcher.UIThread.Post(() =>
-                {
-                    foreach (var child in _children!)
-                    {
-                        if (child.Path == e.FullPath)
-                        {
-                            if (!child.IsDirectory)
-                            {
-                                var info = new FileInfo(e.FullPath);
-
-                                child.Size = info.Length;
-                                child.Modified = info.LastWriteTimeUtc;
-                            }
-                            break;
-                        }
-                    }
-                });
-            }
-        }
-
-        private void OnCreated(object sender, FileSystemEventArgs e)
-        {
-            Dispatcher.UIThread.Post(() =>
-            {
-                var correctPath = System.IO.Path.Combine(Path, e.Name);
-                if (Directory.Exists(correctPath) || File.Exists(correctPath))
-                {
-                    //var file = this;
-
-                    var node = new FileTreeNodeModel(
-                        correctPath,
-                        File.GetAttributes(correctPath).HasFlag(FileAttributes.Directory),
-                        this);
-
-                    HasChildren = Parent != null ? true : false;
-
-                    if (_path == System.IO.Path.GetDirectoryName(node.Path))
-                    {
-                        node.IsChecked = node.Parent.IsChecked == null ? false : node.Parent.IsChecked;
-                        _children!.Add(node);
-
-                    }
-                }
-            });
-        }
-        private void OnDeleted(object sender, FileSystemEventArgs e)
-        {
-            var openedFolder = FileTree.GetOpenedFolder();
-
-            Dispatcher.UIThread.Post(() =>
-            {
-                for (var i = 0; i < _children!.Count; ++i)
-                {
-                    if (_children[i].Path == System.IO.Path.Combine(Path, e.Name))
-                    {
-                        _children.RemoveAt(i);
-                        if (openedFolder.Path.Length >= System.IO.Path.Combine(Path, e.Name).Length)
-                        {
-                            MainWindowViewModel.OpenedFolder.ReturnToExistingFolder(this);
-                        }
-                        Debug.WriteLine($"Removed {e.FullPath}");
-                        break;
-                    }
-                }
-            });
-        }
-
-        private void OnRenamed(object sender, RenamedEventArgs e)
-        {
-            //Dispatcher.UIThread.Post(() =>
-            //{
-                foreach (var child in _children!)
-                {
-                    if (child.Path == System.IO.Path.Combine(Path, e.OldName))
-                    {
-                        child.Path = System.IO.Path.Combine(Path, e.Name);
-                        child.Name = e.Name ?? string.Empty;
-                    }
-                }
-            //});
         }
     }
 }
