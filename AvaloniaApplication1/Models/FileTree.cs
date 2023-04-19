@@ -74,7 +74,7 @@ namespace AvaloniaApplication1.Models
                         e.FullPath.StartsWith(_rootFolderPath))
                     {
                         string pathParentFolder = Path.GetDirectoryName(e.FullPath)/*?.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)*/;
-                        var parent = SearchFile(pathParentFolder, OpenedFolder, Operation.CreateFile);
+                        var parent = SearchFile(pathParentFolder, _rootFolder, Operation.CreateFile);
                         if (parent != null)
                         {
                             foreach (var item in parent.Children)
@@ -140,7 +140,7 @@ namespace AvaloniaApplication1.Models
                     }
                     else
                     {
-                        var parentFolder = SearchFile(Path.GetDirectoryName(e.FullPath), OpenedFolder, Operation.DeleteFile) ?? OpenedFolder;
+                        var parentFolder = SearchFile(Path.GetDirectoryName(e.FullPath), _rootFolder, Operation.DeleteFile) ?? OpenedFolder;
                         try
                         {
                             foreach (var children in parentFolder.Children)
