@@ -12,7 +12,9 @@
 	    Icon="/Assets/avalonia-logo.ico"
 	    Title="AvaloniaApplication1"
 	    MaxWidth="390"
-	    MaxHeight="440">
+	    MaxHeight="440"
+		MinWidth="390"
+	    MinHeight="440">
 	<Window.DataContext>
 		<vm:MainWindowViewModel/>
 	</Window.DataContext>

@@ -130,18 +130,27 @@ namespace AvaloniaApplication1.Models
             {
                 return null;
             }
-            var options = new EnumerationOptions { IgnoreInaccessible = true };
+            var options = new EnumerationOptions { IgnoreInaccessible = false, };
             var result = new ObservableCollection<FileTreeNodeModel>();
 
-            foreach (var d in Directory.EnumerateDirectories(Path, "*", options))
+            foreach(var child in Directory.GetDirectories(Path))
             {
-                result.Add(new FileTreeNodeModel(d, true, this));
+                result.Add(new FileTreeNodeModel(child, true, this));
             }
+            foreach (var child in Directory.GetFiles(Path))
+            {
+                result.Add(new FileTreeNodeModel(child, false, this));
+            }
+            //foreach (var d in Directory.EnumerateDirectories(Path, "*", options))
+            //{
+            //    result.Add(new FileTreeNodeModel(d, true, this));
+            //}
 
-            foreach (var f in Directory.EnumerateFiles(Path, "*", options))
-            {
-                result.Add(new FileTreeNodeModel(f, false, this));
-            }
+            //foreach (var f in Directory.EnumerateFiles(Path, "*", options))
+            //{
+            //    result.Add(new FileTreeNodeModel(f, false, this));
+            //}
+
             if (result.Count == 0)
                 HasChildren = false;
 

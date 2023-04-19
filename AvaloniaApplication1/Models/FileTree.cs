@@ -8,11 +8,15 @@ using System;
 using AvaloniaApplication1.Helper;
 using Avalonia.Threading;
 using JetBrains.Annotations;
+using System.Collections.ObjectModel;
 
 namespace AvaloniaApplication1.Models
 {
     public class FileTree : ReactiveObject
     {
+
+        //private string _rootFolderPath = "/home/orpo/Desktop/1";
+        //private string _startWatcherPath = "/home/orpo/Desktop/1";
 
         private string _rootFolderPath = "C:\\";
         private string _startWatcherPath = "C:\\";
@@ -24,7 +28,6 @@ namespace AvaloniaApplication1.Models
 
         public FileTree()
         {
-            //GC.KeepAlive(_watcher);
             _openedFolder = new FileTreeNodeModel(_rootFolderPath, Directory.Exists(_rootFolderPath));
             _rootFolder = _openedFolder;
             StartWatch();
@@ -47,27 +50,30 @@ namespace AvaloniaApplication1.Models
                                NotifyFilters.FileName |
                                NotifyFilters.DirectoryName |
                                NotifyFilters.Size,
-                
-                //InternalBufferSize = 1073741824,
             };
             _watcher.Created += CreatedFile;
             _watcher.Deleted += DeleteFile;
             _watcher.Renamed += RenamedFile;
             _watcher.Changed += ChangedFile;
         }
-
+        private void DeliteIdentialFile(FileTreeNodeModel parent, string passAddedFile)
+        {
+            //parent.Children.Remove(parent.Children.Where(x => x.Path == passAddedFile).First());
+            parent.Children.Distinct();
+        }
+        //object locker = new object();
         private void CreatedFile(object sender, FileSystemEventArgs e)
         {
-
             Dispatcher.UIThread.Post(() =>
             {
 
-                if (!e.FullPath.StartsWith("C:\\Users"))
+                if (true)
                 {
                     if (e.FullPath.Count(c => c == Path.DirectorySeparatorChar || c == Path.AltDirectorySeparatorChar) >=
-                   _rootFolder.Path.Count(c => c == Path.DirectorySeparatorChar || c == Path.AltDirectorySeparatorChar))
+                        _rootFolder.Path.Count(c => c == Path.DirectorySeparatorChar || c == Path.AltDirectorySeparatorChar) &&
+                        e.FullPath.StartsWith(_rootFolderPath))
                     {
-                        string pathParentFolder = Path.GetDirectoryName(e.FullPath);
+                        string pathParentFolder = Path.GetDirectoryName(e.FullPath)/*?.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)*/;
                         var parent = SearchFile(pathParentFolder, OpenedFolder, Operation.CreateFile);
                         if (parent != null)
                         {
@@ -77,24 +83,59 @@ namespace AvaloniaApplication1.Models
                                     return;
                             }
                             parent.Children.Add(new FileTreeNodeModel(e.FullPath, Directory.Exists(e.FullPath), parent));
+                            //DeliteIdentialFile(parent, e.FullPath);
                         }
                     }
                 }
             });
-
         }
+
+
+
+        //private void CreatedFile(object sender, FileSystemEventArgs e)
+        //{
+        //    Dispatcher.UIThread.InvokeAsync(() =>
+        //    {
+        //        // Если путь начинается с "C:\Users", то выходим из метода
+        //        if (e.FullPath.StartsWith("C:\\Users"))
+        //            return;
+
+        //        // Если количество разделителей пути файла больше или равно количеству разделителей корневой папки,
+        //        // и путь начинается с корневой папки, то добавляем файл в дерево
+        //        if (e.FullPath.Count(c => c == Path.DirectorySeparatorChar || c == Path.AltDirectorySeparatorChar) >=
+        //            _rootFolder.Path.Count(c => c == Path.DirectorySeparatorChar || c == Path.AltDirectorySeparatorChar) &&
+        //            e.FullPath.StartsWith(_rootFolderPath))
+        //        {
+        //            string parentFolderPath = Path.GetDirectoryName(e.FullPath);
+        //            var parentNode = SearchFile(parentFolderPath, OpenedFolder, Operation.CreateFile);
+        //            if (parentNode != null)
+        //            {
+        //                lock (parentNode.Children)
+        //                {
+        //                    // Если файл уже есть в дереве, то выходим из метода
+        //                    if (parentNode.Children.Any(c => c.Path == e.FullPath))
+        //                        return;
+
+        //                    parentNode.Children.Add(new FileTreeNodeModel(e.FullPath, Directory.Exists(e.FullPath), parentNode));
+        //                }
+        //            }
+        //        }
+        //    });
+        //}
+
+
+
+
         private void DeleteFile(object sender, FileSystemEventArgs e)
         {
             Dispatcher.UIThread.Post(() =>
             {
-                if (!e.FullPath.StartsWith("C:\\Users"))
+                if (true)
                 {
                     if (e.FullPath.Count(c => c == Path.DirectorySeparatorChar || c == Path.AltDirectorySeparatorChar) <
                     _rootFolder.Path.Count(c => c == Path.DirectorySeparatorChar || c == Path.AltDirectorySeparatorChar))
                     {
-                        foreach (var file in _openedFolder.Children)
-                            _openedFolder.Children.Remove(file);
-                        _openedFolder.Path = "Исходный путь отсутствует!";
+                        ClearOpenFolderForm(OpenedFolder);
                         return;
                     }
                     else
@@ -131,6 +172,7 @@ namespace AvaloniaApplication1.Models
                     {
                         ChangePathToTheRootFolder(_rootFolder, e.FullPath);
                         ChangePathChildren(_rootFolder);
+                        ClearOpenFolderForm(OpenedFolder);
                     }
                     else
                     {
@@ -213,7 +255,7 @@ namespace AvaloniaApplication1.Models
         }
         private void ChangePathChildren(FileTreeNodeModel changedFile)
         {
-            foreach (var child in changedFile.Children)
+            foreach (var child in changedFile.Children.ToList())
             {
                 child.Path = Path.Combine(changedFile.Path, child.Name);
                 if (Directory.Exists(child.Path))
@@ -235,6 +277,23 @@ namespace AvaloniaApplication1.Models
                     newTreeParentPath = Path.Combine(newTreeParentPath, partsParentPath[i]);
             }
             fileTreeParent.Path = newTreeParentPath;
+        }
+        private void ClearOpenFolderForm(FileTreeNodeModel openedFolder)
+        {
+            try
+            {
+                openedFolder.Path = "Исходный путь отсутствует!";
+                foreach (var child in openedFolder.Children.ToList())
+                {
+                    openedFolder.Children.Remove(child);
+                }
+                openedFolder.Parent = null;
+            }
+            catch (Exception ex)
+            {
+
+            }
+
         }
     }
 }
