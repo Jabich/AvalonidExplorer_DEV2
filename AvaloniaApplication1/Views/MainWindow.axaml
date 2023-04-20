@@ -21,7 +21,12 @@
 
 	<Grid RowDefinitions="40,*,30">
 		<StackPanel>
-			<Button Width="25" Height="25" Margin="5,5,0,0" Command="{Binding GoBackFolderCommand}">
+			<Button Width="25" Height="25" Margin="5,5,0,0" 
+					Command="{Binding GoBackFolderCommand}"
+					>
+				<Button.KeyBindings>
+					<KeyBinding Gesture="Left" Command="{Binding GoToFolderCommand}"></KeyBinding>
+				</Button.KeyBindings>
 				<Button.Template>
 					<ControlTemplate>
 						<Image Source="/Assets/ProvArrowLeft.png"/>
@@ -32,7 +37,7 @@
 					 Text="{Binding FileTree.OpenedFolder.Path}" IsReadOnly="True"/>
 		</StackPanel>
 
-		<ListBox Grid.Row="1" BorderThickness="1" Width="380" Height="320" Margin="0,10,0,0"
+		<ListBox Grid.Row="1" BorderThickness="1" Width="380" Height="330" Margin="0,22,0,0"
 				 Items="{Binding FileTree.OpenedFolder.Children}">
 			<i:Interaction.Behaviors>
 				<ia:EventTriggerBehavior EventName="DoubleTapped">
@@ -60,11 +65,13 @@
 
 		<StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="10"
 					HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,5,10">
-			<Button Width="100" Height="30" Content="ОК"
+			<Label BorderBrush="Black" BorderThickness="1"
+				   Width="220" Height="30" Content="{Binding Extensions}"/>
+			<Button Width="70" Height="30" Content="ОК"
                     HorizontalContentAlignment="Center"
 					Command="{Binding OkCommand}"
 					CommandParameter="{Binding ElementName=SelectFilesForm}"/>
-			<Button Width="100" Height="30" Content="Отмена"
+			<Button Width="70" Height="30" Content="Отмена"
                     HorizontalContentAlignment="Center"
 					Command="{Binding CancelCommand}"
 					CommandParameter="{Binding ElementName=SelectFilesForm}"/>

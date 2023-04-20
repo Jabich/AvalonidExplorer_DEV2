@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Data.Converters;
+using Avalonia.Input;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using AvaloniaApplication1.Helper;
@@ -9,6 +10,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using ReactiveUI;
 using System;
 using System.IO;
+using System.Windows.Input;
 
 namespace AvaloniaApplication1.ViewModels
 {
@@ -19,7 +21,10 @@ namespace AvaloniaApplication1.ViewModels
         private static IconConverter? s_iconConverter;
         private static FileTree _fileTree = new FileTree();
 
+
         #region PROPERTIES
+        public string Extensions { get => ".exe/ .jpeg/ .png"; }
+
         public static FileTree OpenedFolder { get => _fileTree; }
 
         public FileTree FileTree { get { return _fileTree; } set { this.RaiseAndSetIfChanged(ref _fileTree, value); } }
@@ -66,9 +71,8 @@ namespace AvaloniaApplication1.ViewModels
         }
         public void OkCommand(Window window)
         {
-            FileTree.CheckGCWatcher();
+            
         }
-
         #endregion
     }
 }

@@ -126,30 +126,35 @@ namespace AvaloniaApplication1.Models
 
         private ObservableCollection<FileTreeNodeModel> LoadChildren()
         {
+            if(Path == "C:\\Users\\ORPO\\AppData\\Local\\Microsoft\\Edge\\User Data\\Default\\Network")
+            {
+
+            }
             if (!IsDirectory)
             {
                 return null;
             }
-            var options = new EnumerationOptions { IgnoreInaccessible = false, };
+            //var options = new EnumerationOptions { IgnoreInaccessible = true, };
+            var options = new EnumerationOptions()
+            {
+                //MatchType = MatchType.Simple,
+                //MatchCasing = MatchCasing.PlatformDefault,
+                IgnoreInaccessible = true,
+                //RecurseSubdirectories = true,
+                //ReturnSpecialDirectories = false,
+                AttributesToSkip = default
+            };
             var result = new ObservableCollection<FileTreeNodeModel>();
 
-            foreach(var child in Directory.GetDirectories(Path))
+            foreach (var d in Directory.EnumerateDirectories(Path, "*", options))
             {
-                result.Add(new FileTreeNodeModel(child, true, this));
+                result.Add(new FileTreeNodeModel(d, true, this));
             }
-            foreach (var child in Directory.GetFiles(Path))
-            {
-                result.Add(new FileTreeNodeModel(child, false, this));
-            }
-            //foreach (var d in Directory.EnumerateDirectories(Path, "*", options))
-            //{
-            //    result.Add(new FileTreeNodeModel(d, true, this));
-            //}
 
-            //foreach (var f in Directory.EnumerateFiles(Path, "*", options))
-            //{
-            //    result.Add(new FileTreeNodeModel(f, false, this));
-            //}
+            foreach (var f in Directory.EnumerateFiles(Path, "*", options))
+            {
+                result.Add(new FileTreeNodeModel(f, false, this));
+            }
 
             if (result.Count == 0)
                 HasChildren = false;
