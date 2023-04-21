@@ -18,15 +18,19 @@
 	<Window.DataContext>
 		<vm:MainWindowViewModel/>
 	</Window.DataContext>
+	<Window.KeyBindings>
+		<KeyBinding Gesture="Back" Command="{Binding GoBackFolderCommand}" />
+		<KeyBinding Gesture="Left" Command="{Binding GoBackFolderCommand}" />
+		<KeyBinding Gesture="Escape" Command="{Binding CancelCommand}"
+					CommandParameter="{Binding ElementName=SelectFilesForm}"/>
+		<KeyBinding Gesture="Right" Command="{Binding GoToFolderCommand}" 
+					CommandParameter="{Binding RelativeSource={RelativeSource Self}, Path= SelectedItem}" />
+	</Window.KeyBindings>
 
 	<Grid RowDefinitions="40,*,30">
 		<StackPanel>
-			<Button Width="25" Height="25" Margin="5,5,0,0" 
-					Command="{Binding GoBackFolderCommand}"
-					>
-				<Button.KeyBindings>
-					<KeyBinding Gesture="Left" Command="{Binding GoToFolderCommand}"></KeyBinding>
-				</Button.KeyBindings>
+			<Button Width="25" Height="25" Margin="5,5,0,0"
+					Command="{Binding GoBackFolderCommand}">
 				<Button.Template>
 					<ControlTemplate>
 						<Image Source="/Assets/ProvArrowLeft.png"/>
@@ -38,7 +42,11 @@
 		</StackPanel>
 
 		<ListBox Grid.Row="1" BorderThickness="1" Width="380" Height="330" Margin="0,22,0,0"
-				 Items="{Binding FileTree.OpenedFolder.Children}">
+				 Items="{Binding FileTree.OpenedFolder.Children}" HotKeyManager.HotKey="Right">
+			<ListBox.KeyBindings>
+				<KeyBinding Gesture="Right" Command="{Binding GoToFolderCommand}"
+							                CommandParameter="{Binding RelativeSource={RelativeSource Self}, Path=SelectedItem}"/>
+			</ListBox.KeyBindings>
 			<i:Interaction.Behaviors>
 				<ia:EventTriggerBehavior EventName="DoubleTapped">
 					<ia:InvokeCommandAction Command="{Binding GoToFolderCommand}"

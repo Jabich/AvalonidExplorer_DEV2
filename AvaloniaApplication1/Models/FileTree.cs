@@ -5,17 +5,19 @@ using System;
 using System.IO;
 using System.Linq;
 using NLog;
+using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace AvaloniaApplication1.Models
 {
     public class FileTree : ReactiveObject
     {
 
-        //private string _rootFolderPath = "/home/orpo/Desktop/1";
-        //private string _startWatcherPath = "/home/orpo/Desktop/1";
+        private string _rootFolderPath = "/home/orpo/Desktop/1/2";
+        private string _startWatcherPath = "/home/orpo/Desktop/";
 
-        private string _rootFolderPath = "C:\\";
-        private string _startWatcherPath = "C:\\";
+        //private string _rootFolderPath = "C:\\1\\2";
+        //private string _startWatcherPath = "C:\\";
         private static FileTreeNodeModel _openedFolder;
         private static FileSystemWatcher _watcher;
 
@@ -43,23 +45,32 @@ namespace AvaloniaApplication1.Models
             _watcher.Deleted += DeleteFile;
             _watcher.Renamed += RenamedFile;
         }
+        private void DeliteIdentialFile(FileTreeNodeModel parent)
+        {
+            var duplicates = parent.Children.GroupBy(x => x)
+                                           .Where(g => g.Count() > 1)
+                                           .Select(g => g.Key)
+                                           .ToList();
 
+            foreach (var duplicate in duplicates)
+            {
+                parent.Children.Remove(duplicate);
+            }
+        }
         private void CreatedFile(object sender, FileSystemEventArgs e)
         {
             Dispatcher.UIThread.Post(() =>
             {
-                if (!e.FullPath.StartsWith(/*_rootFolderPath */"C:\\Users"))
-                //if (e.FullPath.StartsWith(_startWatcherPath))
+                if (e.FullPath.StartsWith(_rootFolderPath))
                 {
                     if (e.FullPath.Count(c => c == Path.DirectorySeparatorChar || c == Path.AltDirectorySeparatorChar) >=
                             _rootFolderPath.Count(c => c == Path.DirectorySeparatorChar || c == Path.AltDirectorySeparatorChar) &&
                             e.FullPath.StartsWith(_rootFolderPath))
                     {
-                        string pathParentFolder = Path.GetDirectoryName(e.FullPath)/*?.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)*/;
-                        //var parent = SearchFile(pathParentFolder, OpenedFolder);
+                        string pathParentFolder = Path.GetDirectoryName(e.FullPath);
                         var parent = SearchFile(pathParentFolder);
                         if (parent != null)
-                        {
+                        {          
                             try
                             {
                                 foreach (var item in parent.Children.ToList())
@@ -67,7 +78,11 @@ namespace AvaloniaApplication1.Models
                                     if (item.Path == e.FullPath)
                                         return;
                                 }
-                                parent.Children.Add(new FileTreeNodeModel(e.FullPath, Directory.Exists(e.FullPath), parent));
+                                var addFile = new FileTreeNodeModel(e.FullPath, Directory.Exists(e.FullPath), parent);
+                                addFile.IsChecked = addFile.Parent.IsChecked == false || addFile.Parent == null ? false : true;
+                                addFile.Parent.HasChildren = !addFile.IsDirectory ? true : false;
+                                parent.Children.Add(addFile);
+                                DeliteIdentialFile(parent);
                             }
                             catch (Exception ex)
                             {
@@ -78,19 +93,22 @@ namespace AvaloniaApplication1.Models
                 }
             });
         }
-
         private void DeleteFile(object sender, FileSystemEventArgs e)
         {
             Dispatcher.UIThread.Post(() =>
             {
-                if (!e.FullPath.StartsWith(/*_rootFolderPath */"C:\\Users"))
-                //if (e.FullPath.StartsWith(_startWatcherPath))
+                if (e.FullPath.StartsWith(_rootFolderPath) || _rootFolderPath.StartsWith(e.FullPath))
                 {
-                    var a = OpenedFolder.Path.StartsWith(e.FullPath);
-                    var b = e.FullPath.Count(c => c == Path.DirectorySeparatorChar || c == Path.AltDirectorySeparatorChar) <=
-                    OpenedFolder.Path.Count(c => c == Path.DirectorySeparatorChar || c == Path.AltDirectorySeparatorChar);
-                    if (OpenedFolder.Path.StartsWith(e.FullPath) || OpenedFolder.Path.StartsWith(e.FullPath) || e.FullPath.Count(c => c == Path.DirectorySeparatorChar || c == Path.AltDirectorySeparatorChar) >
-                    OpenedFolder.Path.Count(c => c == Path.DirectorySeparatorChar || c == Path.AltDirectorySeparatorChar))
+                    if (OpenedFolder.Path.StartsWith(e.FullPath) && (e.FullPath.Count(c => c == Path.DirectorySeparatorChar || c == Path.AltDirectorySeparatorChar) <=
+                        _rootFolderPath.Count(c => c == Path.DirectorySeparatorChar || c == Path.AltDirectorySeparatorChar)) &&
+                        e.FullPath.Length <= _rootFolderPath.Length)
+                    {
+                        ClearOpenFolderForm(OpenedFolder);
+                        return;
+                    }
+
+                    else if (OpenedFolder.Path.StartsWith(e.FullPath) || (OpenedFolder.Path.StartsWith(e.FullPath) || e.FullPath.Count(c => c == Path.DirectorySeparatorChar || c == Path.AltDirectorySeparatorChar) >
+                    OpenedFolder.Path.Count(c => c == Path.DirectorySeparatorChar || c == Path.AltDirectorySeparatorChar)))
                     {
                         try
                         {
@@ -103,20 +121,12 @@ namespace AvaloniaApplication1.Models
                                 }
                                 if (file.Path == e.FullPath && OpenedFolder.Path.StartsWith(e.FullPath))
                                     OpenedFolder = parent.Parent;
-
-
                             }
                         }
                         catch
                         {
 
                         }
-                    }
-                    else if (_rootFolderPath.Length>=e.FullPath.Length && (e.FullPath.StartsWith(_rootFolderPath) || OpenedFolder.Path.StartsWith(e.FullPath) || e.FullPath.Count(c => c == Path.DirectorySeparatorChar || c == Path.AltDirectorySeparatorChar) <=
-                    OpenedFolder.Path.Count(c => c == Path.DirectorySeparatorChar || c == Path.AltDirectorySeparatorChar)))
-                    {
-                        ClearOpenFolderForm(OpenedFolder);
-                        return;
                     }
                     else
                     {
@@ -144,14 +154,22 @@ namespace AvaloniaApplication1.Models
         {
             Dispatcher.UIThread.Post(() =>
             {
-                if (!e.FullPath.StartsWith(/*_rootFolderPath */"C:\\Users"))
-                //if (e.FullPath.StartsWith(_startWatcherPath))
+                //if (!e.FullPath.StartsWith(/*_rootFolderPath */"C:\\Users"))
+                if (e.FullPath.StartsWith(_rootFolderPath) || _rootFolderPath.StartsWith(e.OldFullPath))
                 {
-                    if (OpenedFolder.Path.StartsWith(e.FullPath) || e.FullPath.Count(c => c == Path.DirectorySeparatorChar || c == Path.AltDirectorySeparatorChar) <
-                OpenedFolder.Path.Count(c => c == Path.DirectorySeparatorChar || c == Path.AltDirectorySeparatorChar))
+                    bool a = OpenedFolder.Path.StartsWith(e.OldFullPath);
+                    bool b = (e.OldFullPath.Count(c => c == Path.DirectorySeparatorChar || c == Path.AltDirectorySeparatorChar) <=
+                        _rootFolderPath.Count(c => c == Path.DirectorySeparatorChar || c == Path.AltDirectorySeparatorChar));
+                    bool c = e.OldFullPath.Length <= _rootFolderPath.Length;
+
+
+
+                    if (OpenedFolder.Path.StartsWith(e.OldFullPath) && (e.FullPath.Count(c => c == Path.DirectorySeparatorChar || c == Path.AltDirectorySeparatorChar) <=
+                        _rootFolderPath.Count(c => c == Path.DirectorySeparatorChar || c == Path.AltDirectorySeparatorChar)) &&
+                        e.OldFullPath.Length <= _rootFolderPath.Length)
                     {
-                        ChangePathToTheRootFolder(OpenedFolder, e.FullPath);
-                        ChangePathChildren(OpenedFolder);
+                        //ChangePathToTheRootFolder(OpenedFolder, e.FullPath);
+                        //ChangePathChildren(OpenedFolder);
                         ClearOpenFolderForm(OpenedFolder);
                     }
                     else
@@ -191,10 +209,8 @@ namespace AvaloniaApplication1.Models
             }
         }
 
-        object locker = new object();
         private FileTreeNodeModel SearchFile(string searchedFilePath)
         {
-            //lock(locker)
             {
                 if (OpenedFolder.Path == searchedFilePath)
                     return OpenedFolder;

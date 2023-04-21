@@ -53,7 +53,7 @@ namespace AvaloniaApplication1.Models
         public string Version
         {
             get => _version;
-            private set => this.RaiseAndSetIfChanged(ref _version, value);
+            set => this.RaiseAndSetIfChanged(ref _version, value);
         }
         public string Path
         {
@@ -126,22 +126,13 @@ namespace AvaloniaApplication1.Models
 
         private ObservableCollection<FileTreeNodeModel> LoadChildren()
         {
-            if(Path == "C:\\Users\\ORPO\\AppData\\Local\\Microsoft\\Edge\\User Data\\Default\\Network")
-            {
-
-            }
             if (!IsDirectory)
             {
                 return null;
             }
-            //var options = new EnumerationOptions { IgnoreInaccessible = true, };
             var options = new EnumerationOptions()
             {
-                //MatchType = MatchType.Simple,
-                //MatchCasing = MatchCasing.PlatformDefault,
                 IgnoreInaccessible = true,
-                //RecurseSubdirectories = true,
-                //ReturnSpecialDirectories = false,
                 AttributesToSkip = default
             };
             var result = new ObservableCollection<FileTreeNodeModel>();

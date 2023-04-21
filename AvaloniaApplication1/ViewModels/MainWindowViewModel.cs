@@ -71,7 +71,7 @@ namespace AvaloniaApplication1.ViewModels
         }
         public void OkCommand(Window window)
         {
-            
+
         }
         #endregion
     }
