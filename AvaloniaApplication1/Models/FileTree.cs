@@ -7,17 +7,25 @@ using System.Linq;
 using NLog;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using Microsoft.VisualBasic;
 
 namespace AvaloniaApplication1.Models
 {
     public class FileTree : ReactiveObject
     {
 
-        private string _rootFolderPath = "/home/orpo/Desktop/1/2";
-        private string _startWatcherPath = "/home/orpo/Desktop/";
+        //WSL
+        private string _rootFolderPath = "/home/orpo/1";
+        private string _startWatcherPath = "/home";
 
+        //Windows
         //private string _rootFolderPath = "C:\\1\\2";
         //private string _startWatcherPath = "C:\\";
+
+        //Astra
+        //private string _rootFolderPath = "/home/orpo/Desktop/1";
+        //private string _startWatcherPath = "/home/orpo/Desktop/1";
+
         private static FileTreeNodeModel _openedFolder;
         private static FileSystemWatcher _watcher;
 
@@ -45,9 +53,10 @@ namespace AvaloniaApplication1.Models
             _watcher.Deleted += DeleteFile;
             _watcher.Renamed += RenamedFile;
         }
-        private void DeliteIdentialFile(FileTreeNodeModel parent)
+        private void DeliteIdentialFile(FileTreeNodeModel parent, string pathAddFile)
         {
-            var duplicates = parent.Children.GroupBy(x => x)
+            var duplicates = parent.Children.Where(x => x.Path == pathAddFile)
+                                           .GroupBy(x => x)
                                            .Where(g => g.Count() > 1)
                                            .Select(g => g.Key)
                                            .ToList();
@@ -70,7 +79,7 @@ namespace AvaloniaApplication1.Models
                         string pathParentFolder = Path.GetDirectoryName(e.FullPath);
                         var parent = SearchFile(pathParentFolder);
                         if (parent != null)
-                        {          
+                        {
                             try
                             {
                                 foreach (var item in parent.Children.ToList())
@@ -80,13 +89,14 @@ namespace AvaloniaApplication1.Models
                                 }
                                 var addFile = new FileTreeNodeModel(e.FullPath, Directory.Exists(e.FullPath), parent);
                                 addFile.IsChecked = addFile.Parent.IsChecked == false || addFile.Parent == null ? false : true;
-                                addFile.Parent.HasChildren = !addFile.IsDirectory ? true : false;
+                                addFile.HasChildren = addFile.IsDirectory && addFile.Children.Count != 0 || addFile.Children != null ? true : false;
+                                addFile.Parent.HasChildren = true;
                                 parent.Children.Add(addFile);
-                                DeliteIdentialFile(parent);
+                                DeliteIdentialFile(parent, e.FullPath);
                             }
                             catch (Exception ex)
                             {
-
+                                DeliteIdentialFile(parent, e.FullPath);
                             }
                         }
                     }

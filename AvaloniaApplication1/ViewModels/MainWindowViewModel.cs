@@ -17,7 +17,7 @@ namespace AvaloniaApplication1.ViewModels
     public class MainWindowViewModel : ViewModelBase
     {
 
-        public FileSystemWatcher FileSystemWatcher { get; set; }
+        public FileSystemWatcher FileSystemWatcoher { get; set; }
         private static IconConverter? s_iconConverter;
         private static FileTree _fileTree = new FileTree();
 
