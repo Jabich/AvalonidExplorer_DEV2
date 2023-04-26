@@ -19,7 +19,6 @@
 		<vm:MainWindowViewModel/>
 	</Window.DataContext>
 	<Window.KeyBindings>
-		<KeyBinding Gesture="Back" Command="{Binding GoBackFolderCommand}" />
 		<KeyBinding Gesture="Left" Command="{Binding GoBackFolderCommand}" />
 		<KeyBinding Gesture="Escape" Command="{Binding CancelCommand}"
 					CommandParameter="{Binding ElementName=SelectFilesForm}"/>
@@ -42,7 +41,7 @@
 		</StackPanel>
 
 		<ListBox Grid.Row="1" BorderThickness="1" Width="380" Height="330" Margin="0,22,0,0"
-				 Items="{Binding FileTree.OpenedFolder.Children}" HotKeyManager.HotKey="Right">
+				 Items="{Binding FilteredItems}" HotKeyManager.HotKey="Right">
 			<ListBox.KeyBindings>
 				<KeyBinding Gesture="Right" Command="{Binding GoToFolderCommand}"
 							                CommandParameter="{Binding RelativeSource={RelativeSource Self}, Path=SelectedItem}"/>
@@ -73,8 +72,9 @@
 
 		<StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="10"
 					HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,5,10">
-			<Label BorderBrush="Black" BorderThickness="1"
-				   Width="220" Height="30" Content="{Binding Extensions}"/>
+			<TextBox Width="220" Watermark="png/exe/jpeg/spa/spu">
+				
+			</TextBox>
 			<Button Width="70" Height="30" Content="ОК"
                     HorizontalContentAlignment="Center"
 					Command="{Binding OkCommand}"

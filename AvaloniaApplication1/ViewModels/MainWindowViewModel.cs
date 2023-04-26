@@ -9,15 +9,15 @@ using AvaloniaApplication1.Models;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using ReactiveUI;
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Windows.Input;
 
 namespace AvaloniaApplication1.ViewModels
 {
     public class MainWindowViewModel : ViewModelBase
     {
-
-        public FileSystemWatcher FileSystemWatcoher { get; set; }
         private static IconConverter? s_iconConverter;
         private static FileTree _fileTree = new FileTree();
 
@@ -26,6 +26,14 @@ namespace AvaloniaApplication1.ViewModels
         public string Extensions { get => ".exe/ .jpeg/ .png"; }
 
         public static FileTree OpenedFolder { get => _fileTree; }
+        public IEnumerable<FileTreeNodeModel> FilteredItems
+        {
+            get
+            {
+                return OpenedFolder.OpenedFolder.Children.Where(file => file.Name.Contains(".lnk"));
+                //return OpenedFolder.OpenedFolder.Children;
+            }
+        }
 
         public FileTree FileTree { get { return _fileTree; } set { this.RaiseAndSetIfChanged(ref _fileTree, value); } }
 
@@ -71,6 +79,7 @@ namespace AvaloniaApplication1.ViewModels
         }
         public void OkCommand(Window window)
         {
+            ExtensionHandler.ParseExtensionsStrins("awdawdawd");
 
         }
         #endregion

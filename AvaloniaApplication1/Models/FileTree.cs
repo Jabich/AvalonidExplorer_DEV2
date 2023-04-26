@@ -7,6 +7,9 @@ using System.Linq;
 using NLog;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.Threading;
+using Avalonia.Controls;
+using JetBrains.Annotations;
 using Microsoft.VisualBasic;
 
 namespace AvaloniaApplication1.Models
@@ -18,12 +21,12 @@ namespace AvaloniaApplication1.Models
         // private string _startWatcherPath = "/home";
 
         //Windows
-        //private string _rootFolderPath = "C:\\1\\2";
-        //private string _startWatcherPath = "C:\\";
+        private string _rootFolderPath = "C:\\1\\2";
+        private string _startWatcherPath = "C:\\1\\2";
 
         //Astra
-        private string _rootFolderPath = "/home/orpo/Desktops/Desktop1/1";
-        private string _startWatcherPath = "/";
+        //private string _rootFolderPath = "/home/orpo/Desktops/Desktop1/1/2";
+        //private string _startWatcherPath = "/home/orpo/Desktops/Desktop1/1/2";
 
         private static FileTreeNodeModel _openedFolder;
         public static FileSystemWatcher _watcher;
@@ -37,7 +40,20 @@ namespace AvaloniaApplication1.Models
         public FileTree()
         {
             _openedFolder = new FileTreeNodeModel(_rootFolderPath, Directory.Exists(_rootFolderPath));
+            Task.Run(() => { CheckChangeRootFolder(); });
             StartWatch();
+        }
+
+        private void CheckChangeRootFolder()
+        {
+            while (true)
+            {
+                if (!Directory.Exists(_rootFolderPath))
+                {
+                    ClearOpenFolderForm();
+                    break;
+                }
+            }
         }
 
         private void StartWatch()
@@ -55,20 +71,6 @@ namespace AvaloniaApplication1.Models
             _watcher.Created += CreatedFile;
             _watcher.Deleted += DeleteFile;
             _watcher.Renamed += RenamedFile;
-        }
-
-        private void DeliteIdentialFile(FileTreeNodeModel parent, string pathAddFile)
-        {
-            var duplicates = parent.Children.Where(x => x.Path == pathAddFile)
-                .GroupBy(x => x)
-                .Where(g => g.Count() > 1)
-                .Select(g => g.Key)
-                .ToList();
-
-            foreach (var duplicate in duplicates)
-            {
-                parent.Children.Remove(duplicate);
-            }
         }
 
         private void CreatedFile(object sender, FileSystemEventArgs e)
@@ -105,13 +107,9 @@ namespace AvaloniaApplication1.Models
                                         : false;
                                 addFile.Parent.HasChildren = true;
                                 parent.Children.Add(addFile);
-                                StartWatch();
-                                // DeliteIdentialFile(parent, e.FullPath);
                             }
                             catch (Exception ex)
                             {
-                                StartWatch();
-                                // DeliteIdentialFile(parent, e.FullPath);
                             }
                         }
                     }
@@ -132,7 +130,7 @@ namespace AvaloniaApplication1.Models
                              c == Path.DirectorySeparatorChar || c == Path.AltDirectorySeparatorChar)) &&
                         e.FullPath.Length <= _rootFolderPath.Length)
                     {
-                        ClearOpenFolderForm(OpenedFolder);
+                        ClearOpenFolderForm();
                         return;
                     }
 
@@ -159,11 +157,9 @@ namespace AvaloniaApplication1.Models
                                     OpenedFolder = parent.Parent;
                                 }
                             }
-                            // StartWatch();
                         }
                         catch
                         {
-                            StartWatch();
                         }
                     }
                     else
@@ -178,11 +174,9 @@ namespace AvaloniaApplication1.Models
                                     parentFolder.Children.Remove(children);
                                 }
                             }
-                            // StartWatch();
                         }
                         catch
                         {
-                            StartWatch();
                         }
                     }
                 }
@@ -203,7 +197,7 @@ namespace AvaloniaApplication1.Models
                              c == Path.DirectorySeparatorChar || c == Path.AltDirectorySeparatorChar)) &&
                         e.OldFullPath.Length <= _rootFolderPath.Length)
                     {
-                        ClearOpenFolderForm(OpenedFolder);
+                        ClearOpenFolderForm();
                     }
                     else
                     {
@@ -241,7 +235,6 @@ namespace AvaloniaApplication1.Models
             if (selectedFile != null && Directory.Exists(selectedFile.Path))
             {
                 OpenedFolder = selectedFile;
-                // StartWatch();
             }
         }
 
@@ -250,7 +243,6 @@ namespace AvaloniaApplication1.Models
             if (OpenedFolder != null && OpenedFolder.Parent != null)
             {
                 OpenedFolder = OpenedFolder.Parent;
-                // StartWatch();
             }
         }
 
@@ -315,26 +307,26 @@ namespace AvaloniaApplication1.Models
                 if (i >= countSeparatorsChangedFilePath + 1)
                     newTreeParentPath = Path.Combine(newTreeParentPath, partsParentPath[i]);
             }
+
             fileTreeParent.Path = newTreeParentPath;
         }
 
-        private void ClearOpenFolderForm(FileTreeNodeModel openedFolder)
+        private void ClearOpenFolderForm()
         {
             try
             {
-                openedFolder.Path = "Исходный путь отсутствует!";
-                foreach (var child in openedFolder.Children.ToList())
+                OpenedFolder.Path = "Исходный путь отсутствует!";
+                foreach (var child in OpenedFolder.Children.ToList())
                 {
-                    openedFolder.Children.Remove(child);
+                    OpenedFolder.Children.Remove(child);
                 }
-                openedFolder.Parent = null;
+
+                OpenedFolder.Parent = null;
             }
             catch (Exception ex)
             {
-
             }
         }
-
     }
 }
 
