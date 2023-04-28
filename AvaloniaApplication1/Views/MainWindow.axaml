@@ -39,7 +39,6 @@
 			<TextBox Margin="5" Height="10" VerticalAlignment="Top"
 					 Text="{Binding MainModel.FileTree.Path}" IsReadOnly="True"/>
 		</StackPanel>
-		<!-- Items="{Binding FileTree.OpenedFolder.Children}" HotKeyManager.HotKey="Right">-->
 		<ListBox Grid.Row="1" BorderThickness="1" Width="380" Height="330" Margin="0,22,0,0"
 				 Items="{Binding MainModel.FileTree.Children}" HotKeyManager.HotKey="Right">
 			<ListBox.KeyBindings>

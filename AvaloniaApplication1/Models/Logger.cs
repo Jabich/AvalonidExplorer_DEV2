@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 using NLog;
 using NLog.Targets;
 using NLog.Config;
+using System.IO;
+using System.Data;
+using System.ComponentModel.DataAnnotations;
 
 namespace AvaloniaApplication1.Models
 {
@@ -14,13 +17,14 @@ namespace AvaloniaApplication1.Models
         private LoggingConfiguration config = new LoggingConfiguration();
         private LoggingRule rule = new LoggingRule("*", LogLevel.Debug, fileTarget);
         public static NLog.Logger logger = LogManager.GetCurrentClassLogger();
+        private static int countLogFiles = 0;
 
         static FileTarget fileTarget = new FileTarget("logfile")
         {
             FileName = "${basedir}/logs/${shortdate}.log",
-            Layout = "${longdate} ${level} ${message} ${exception:format=ToString}"
-            //target name = "file" xsi:type = "File" fileName = "${basedir}/logs/${shortdate}.log"
-            //    layout = "${longdate} ${uppercase:${level}} ${message} ${exception:format=ToString}"
+            Layout = "${longdate} ${level} ${message} ${exception:format=ToString}",
+            ArchiveAboveSize = 1073741824L,
+            MaxArchiveDays = 7
         };
         public Logger()
         {

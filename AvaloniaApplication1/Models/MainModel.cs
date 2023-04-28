@@ -26,7 +26,11 @@ namespace AvaloniaApplication1.Models
         {
             _fileTree = new FileTree(_pathRootFolder, true);
             _watcher = new Watcher(_pathRootFolder, _fileTree, this);
-            Logger.logger.Debug("asdasdasdasd");
+            
+            Task.Run(() =>
+            {
+                CheckChangeRootPath();
+            });
         }
 
         public void GoToFolder(FileTree selectedFile)
@@ -108,6 +112,15 @@ namespace AvaloniaApplication1.Models
             }
             catch (Exception ex)
             {
+            }
+        }
+        private void CheckChangeRootPath()
+        {
+            while (true)
+            {
+                if (!Directory.Exists(_pathRootFolder))
+                    ClearOpenFolderForm();
+              
             }
         }
         public void TEST(FileTree fileTree)
