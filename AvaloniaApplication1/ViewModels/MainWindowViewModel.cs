@@ -19,23 +19,13 @@ namespace AvaloniaApplication1.ViewModels
     public class MainWindowViewModel : ViewModelBase
     {
         private static IconConverter? s_iconConverter;
-        private static FileTreeModel _fileTree = new FileTreeModel();
+        //private static FileTreeModel _fileTree = new FileTreeModel();
 
+        private MainModel _mainModel = new MainModel();
+        public MainModel MainModel { get { return _mainModel; } set { this.RaiseAndSetIfChanged(ref _mainModel, value); } }
 
         #region PROPERTIES
         public string Extensions { get => ".exe/ .jpeg/ .png"; }
-
-        public static FileTreeModel OpenedFolder { get => _fileTree; }
-        public IEnumerable<FileTree> FilteredItems
-        {
-            get
-            {
-                return OpenedFolder.OpenedFolder.Children.Where(file => file.Name.Contains(".lnk"));
-                //return OpenedFolder.OpenedFolder.Children;
-            }
-        }
-
-        public FileTreeModel FileTree { get { return _fileTree; } set { this.RaiseAndSetIfChanged(ref _fileTree, value); } }
 
         public static IMultiValueConverter FileIconConverter
         {
@@ -63,14 +53,14 @@ namespace AvaloniaApplication1.ViewModels
         {
             if (selectedFile != null && Directory.Exists(selectedFile.Path))
             {
-                FileTree.GoToFolder(selectedFile);
+                MainModel.GoToFolder(selectedFile);
             }
         }
         public void GoBackFolderCommand()
         {
-            if (FileTree.OpenedFolder != null && FileTree.OpenedFolder.Parent != null)
+            if (MainModel.FileTree != null && MainModel.FileTree.Parent != null)
             {
-                FileTree.GoBackFolder();
+                MainModel.GoBackFolder();
             }
         }
         public void CancelCommand(Window window)
@@ -79,8 +69,6 @@ namespace AvaloniaApplication1.ViewModels
         }
         public void OkCommand(Window window)
         {
-            ExtensionHandler.ParseExtensionsStrins("awdawdawd");
-
         }
         #endregion
     }

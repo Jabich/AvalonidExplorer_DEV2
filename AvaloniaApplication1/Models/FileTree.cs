@@ -13,6 +13,7 @@ namespace AvaloniaApplication1.Models
 {
     public class FileTree : ReactiveObject
     {
+        public static FileSystemWatcher _watcherSecond;
         #region FIELDS
         private string _path;
         private string _name;
@@ -45,16 +46,6 @@ namespace AvaloniaApplication1.Models
                 }
             }
         }
-        public string? HashSum
-        {
-            get => _hashSum;
-            private set => this.RaiseAndSetIfChanged(ref _hashSum, value);
-        }
-        public string Version
-        {
-            get => _version;
-            set => this.RaiseAndSetIfChanged(ref _version, value);
-        }
         public string Path
         {
             get => _path;
@@ -70,12 +61,16 @@ namespace AvaloniaApplication1.Models
             get => _hasChildren;
             set => this.RaiseAndSetIfChanged(ref _hasChildren, value);
         }
+        public bool IsExpanded
+        {
+            get => _isExpanded;
+            set => this.RaiseAndSetIfChanged(ref _isExpanded, value);
+        }
 
         public bool IsDirectory { get; }
         public FileTree? Parent { get; set; }
         public ObservableCollection<FileTree> Children => _children ??= LoadChildren();
-        #endregion
-
+#endregion
 
         public FileTree(string path, bool isDirectory, FileTree? parent = null, bool isRoot = false)
         {
@@ -86,26 +81,6 @@ namespace AvaloniaApplication1.Models
             HasChildren = isDirectory;
             _isChecked = false;
             Parent = parent;
-            try
-            {
-                if (!IsDirectory)
-                {
-                    _version = string.IsNullOrEmpty(FileVersionInfo.GetVersionInfo(Path).ProductVersion!)
-                        ? "-"
-                        : FileVersionInfo.GetVersionInfo(Path).ProductVersion!;
-
-                    var info = new FileInfo(path);
-                }
-                else
-                {
-                    _version = "-";
-                }
-            }
-            catch
-            {
-
-            }
-
         }
 
         private ObservableCollection<FileTree> LoadChildren()

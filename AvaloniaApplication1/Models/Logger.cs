@@ -11,9 +11,9 @@ namespace AvaloniaApplication1.Models
 {
     public class Logger
     {
-        LoggingConfiguration config = new LoggingConfiguration();
-        LoggingRule rule = new LoggingRule("*", LogLevel.Debug, fileTarget);
-        public NLog.Logger logger = LogManager.GetCurrentClassLogger();
+        private LoggingConfiguration config = new LoggingConfiguration();
+        private LoggingRule rule = new LoggingRule("*", LogLevel.Debug, fileTarget);
+        public static NLog.Logger logger = LogManager.GetCurrentClassLogger();
 
         static FileTarget fileTarget = new FileTarget("logfile")
         {
