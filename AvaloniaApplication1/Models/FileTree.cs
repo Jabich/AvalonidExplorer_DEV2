@@ -1,635 +1,140 @@
-﻿using Avalonia.Threading;
-using AvaloniaApplication1.Helper;
+﻿using Avalonia.Controls.Shapes;
+using Avalonia.Threading;
+using AvaloniaApplication1.ViewModels;
 using ReactiveUI;
 using System;
-using System.IO;
-using System.Linq;
-using NLog;
-using System.Threading.Tasks;
 using System.Collections.Generic;
-using System.Threading;
-using Avalonia.Controls;
-using JetBrains.Annotations;
-using Microsoft.VisualBasic;
+using System.Collections.ObjectModel;
+using System.Diagnostics;
+using System.IO;
+using System.Threading.Tasks;
 
 namespace AvaloniaApplication1.Models
 {
     public class FileTree : ReactiveObject
     {
-        //WSL
-        // private string _rootFolderPath = "/home/orpo/1";
-        // private string _startWatcherPath = "/home";
+        #region FIELDS
+        private string _path;
+        private string _name;
+        private long? _size;
+        private DateTimeOffset? _modified;
+        private ObservableCollection<FileTree>? _children;
+        private bool _hasChildren = true;
+        private bool _isExpanded;
+        private string _version;
+        private string? _hashSum;
+        private bool _isChecked;
+        #endregion
 
-        //Windows
-        private string _rootFolderPath = "C:\\1\\2";
-        private string _startWatcherPath = "C:\\1\\2";
-
-        //Astra
-        //private string _rootFolderPath = "/home/orpo/Desktops/Desktop1/1/2";
-        //private string _startWatcherPath = "/home/orpo/Desktops/Desktop1/1/2";
-
-        private static FileTreeNodeModel _openedFolder;
-        public static FileSystemWatcher _watcher;
-
-        public FileTreeNodeModel OpenedFolder
+        #region PROPERTIES
+        public bool IsChecked
         {
-            get => _openedFolder;
-            set => this.RaiseAndSetIfChanged(ref _openedFolder, value);
-        }
-
-        public FileTree()
-        {
-            _openedFolder = new FileTreeNodeModel(_rootFolderPath, Directory.Exists(_rootFolderPath));
-            Task.Run(() => { CheckChangeRootFolder(); });
-            StartWatch();
-        }
-
-        private void CheckChangeRootFolder()
-        {
-            while (true)
+            get => _isChecked;
+            set
             {
-                if (!Directory.Exists(_rootFolderPath))
+                this.RaiseAndSetIfChanged(ref _isChecked, value);
+                if (HasChildren)
                 {
-                    ClearOpenFolderForm();
-                    break;
+                    Task.Run(() =>
+                    {
+                        foreach (var child in Children)
+                        {
+                            child.IsChecked = value;
+                        }
+                    });
                 }
             }
         }
-
-        private void StartWatch()
+        public string? HashSum
         {
-            _watcher = new FileSystemWatcher()
-            {
-                Path = _startWatcherPath,
-                EnableRaisingEvents = true,
-                IncludeSubdirectories = true,
-                NotifyFilter = NotifyFilters.LastWrite |
-                               NotifyFilters.FileName |
-                               NotifyFilters.DirectoryName |
-                               NotifyFilters.Size,
-            };
-            _watcher.Created += CreatedFile;
-            _watcher.Deleted += DeleteFile;
-            _watcher.Renamed += RenamedFile;
+            get => _hashSum;
+            private set => this.RaiseAndSetIfChanged(ref _hashSum, value);
+        }
+        public string Version
+        {
+            get => _version;
+            set => this.RaiseAndSetIfChanged(ref _version, value);
+        }
+        public string Path
+        {
+            get => _path;
+            set => this.RaiseAndSetIfChanged(ref _path, value);
+        }
+        public string Name
+        {
+            get => _name;
+            set => this.RaiseAndSetIfChanged(ref _name, value);
+        }
+        public bool HasChildren
+        {
+            get => _hasChildren;
+            set => this.RaiseAndSetIfChanged(ref _hasChildren, value);
         }
 
-        private void CreatedFile(object sender, FileSystemEventArgs e)
+        public bool IsDirectory { get; }
+        public FileTree? Parent { get; set; }
+        public ObservableCollection<FileTree> Children => _children ??= LoadChildren();
+        #endregion
+
+
+        public FileTree(string path, bool isDirectory, FileTree? parent = null, bool isRoot = false)
         {
-            Dispatcher.UIThread.Post(() =>
-            {
-                if (e.FullPath.StartsWith(_rootFolderPath))
-                {
-                    if (e.FullPath.Count(c =>
-                            c == Path.DirectorySeparatorChar || c == Path.AltDirectorySeparatorChar) >=
-                        _rootFolderPath.Count(c =>
-                            c == Path.DirectorySeparatorChar || c == Path.AltDirectorySeparatorChar) &&
-                        e.FullPath.StartsWith(_rootFolderPath))
-                    {
-                        string pathParentFolder = Path.GetDirectoryName(e.FullPath);
-                        var parent = SearchFile(pathParentFolder);
-                        if (parent != null)
-                        {
-                            try
-                            {
-                                foreach (var item in parent.Children.ToList())
-                                {
-                                    if (item.Path == e.FullPath)
-                                        return;
-                                }
-
-                                var addFile = new FileTreeNodeModel(e.FullPath, Directory.Exists(e.FullPath), parent);
-                                addFile.IsChecked = addFile.Parent.IsChecked == false || addFile.Parent == null
-                                    ? false
-                                    : true;
-                                addFile.HasChildren =
-                                    addFile.IsDirectory && addFile.Children.Count != 0 || addFile.Children != null
-                                        ? true
-                                        : false;
-                                addFile.Parent.HasChildren = true;
-                                parent.Children.Add(addFile);
-                            }
-                            catch (Exception ex)
-                            {
-                            }
-                        }
-                    }
-                }
-            });
-        }
-
-        private void DeleteFile(object sender, FileSystemEventArgs e)
-        {
-            Dispatcher.UIThread.Post(() =>
-            {
-                if (e.FullPath.StartsWith(_rootFolderPath) || _rootFolderPath.StartsWith(e.FullPath))
-                {
-                    if (OpenedFolder.Path.StartsWith(e.FullPath) &&
-                        (e.FullPath.Count(c =>
-                             c == Path.DirectorySeparatorChar || c == Path.AltDirectorySeparatorChar) <=
-                         _rootFolderPath.Count(c =>
-                             c == Path.DirectorySeparatorChar || c == Path.AltDirectorySeparatorChar)) &&
-                        e.FullPath.Length <= _rootFolderPath.Length)
-                    {
-                        ClearOpenFolderForm();
-                        return;
-                    }
-
-                    else if (OpenedFolder.Path.StartsWith(e.FullPath) || (OpenedFolder.Path.StartsWith(e.FullPath) ||
-                                                                          e.FullPath.Count(c =>
-                                                                              c == Path.DirectorySeparatorChar ||
-                                                                              c == Path.AltDirectorySeparatorChar) >
-                                                                          OpenedFolder.Path.Count(c =>
-                                                                              c == Path.DirectorySeparatorChar ||
-                                                                              c == Path.AltDirectorySeparatorChar)))
-                    {
-                        try
-                        {
-                            var parent = SearchFile(e.FullPath);
-                            foreach (var file in parent.Parent.Children.ToList())
-                            {
-                                if (file.Path == e.FullPath)
-                                {
-                                    parent.Parent.Children.Remove(file);
-                                }
-
-                                if (file.Path == e.FullPath && OpenedFolder.Path.StartsWith(e.FullPath))
-                                {
-                                    OpenedFolder = parent.Parent;
-                                }
-                            }
-                        }
-                        catch
-                        {
-                        }
-                    }
-                    else
-                    {
-                        var parentFolder = SearchFile(Path.GetDirectoryName(e.FullPath));
-                        try
-                        {
-                            foreach (var children in parentFolder.Children.ToList())
-                            {
-                                if (children.Path == e.FullPath)
-                                {
-                                    parentFolder.Children.Remove(children);
-                                }
-                            }
-                        }
-                        catch
-                        {
-                        }
-                    }
-                }
-            });
-        }
-
-        private void RenamedFile(object sender, RenamedEventArgs e)
-        {
-            Dispatcher.UIThread.Post(() =>
-            {
-                //if (!e.FullPath.StartsWith(/*_rootFolderPath */"C:\\Users"))
-                if (e.FullPath.StartsWith(_rootFolderPath) || _rootFolderPath.StartsWith(e.OldFullPath))
-                {
-                    if (OpenedFolder.Path.StartsWith(e.OldFullPath) &&
-                        (e.FullPath.Count(c =>
-                             c == Path.DirectorySeparatorChar || c == Path.AltDirectorySeparatorChar) <=
-                         _rootFolderPath.Count(c =>
-                             c == Path.DirectorySeparatorChar || c == Path.AltDirectorySeparatorChar)) &&
-                        e.OldFullPath.Length <= _rootFolderPath.Length)
-                    {
-                        ClearOpenFolderForm();
-                    }
-                    else
-                    {
-                        try
-                        {
-                            var changedFile = SearchFile(e.OldFullPath);
-                            foreach (var file in changedFile.Parent.Children.ToList())
-                            {
-                                if (file.Name == Path.GetFileName(e.FullPath))
-                                {
-                                    changedFile.Parent.Children.Remove(file);
-                                }
-                            }
-
-                            if (changedFile != null)
-                            {
-                                changedFile.Path = e.FullPath;
-                                changedFile.Name = Path.GetFileName(e.FullPath);
-                                ChangePathChildren(changedFile);
-                            }
-
-                            StartWatch();
-                        }
-                        catch
-                        {
-                            StartWatch();
-                        }
-                    }
-                }
-            });
-        }
-
-        public void GoToFolder(FileTreeNodeModel selectedFile)
-        {
-            if (selectedFile != null && Directory.Exists(selectedFile.Path))
-            {
-                OpenedFolder = selectedFile;
-            }
-        }
-
-        public void GoBackFolder()
-        {
-            if (OpenedFolder != null && OpenedFolder.Parent != null)
-            {
-                OpenedFolder = OpenedFolder.Parent;
-            }
-        }
-
-        private FileTreeNodeModel SearchFile(string searchedFilePath)
-        {
-            {
-                if (OpenedFolder.Path == searchedFilePath)
-                    return OpenedFolder;
-                else if (searchedFilePath.StartsWith(OpenedFolder.Path))
-                    return SearchChildren(searchedFilePath, OpenedFolder);
-                else if (OpenedFolder.Path.StartsWith(searchedFilePath))
-                    return SearchTreeParent(searchedFilePath, OpenedFolder);
-                else
-                    return SearchChildren(searchedFilePath, SearchTreeParent(searchedFilePath, OpenedFolder));
-            }
-        }
-
-        private FileTreeNodeModel SearchTreeParent(string searchedFilePath, FileTreeNodeModel openedFolder)
-        {
-            return searchedFilePath.StartsWith(openedFolder.Path)
-                ? openedFolder
-                : SearchTreeParent(searchedFilePath, openedFolder.Parent);
-        }
-
-        private FileTreeNodeModel SearchChildren(string searchedFilePath, FileTreeNodeModel rootFolder)
-        {
-            var maxMatchFile1 = rootFolder.Children.ToList().Where(x => searchedFilePath.StartsWith(x.Path))
-                .OrderByDescending(x => x.Path.Length).FirstOrDefault();
+            _path = path;
+            _name = isRoot ? path : System.IO.Path.GetFileName(Path);
+            _isExpanded = isRoot;
+            IsDirectory = isDirectory;
+            HasChildren = isDirectory;
+            _isChecked = false;
+            Parent = parent;
             try
             {
-                return maxMatchFile1.Path == searchedFilePath
-                    ? maxMatchFile1
-                    : SearchChildren(searchedFilePath, maxMatchFile1);
+                if (!IsDirectory)
+                {
+                    _version = string.IsNullOrEmpty(FileVersionInfo.GetVersionInfo(Path).ProductVersion!)
+                        ? "-"
+                        : FileVersionInfo.GetVersionInfo(Path).ProductVersion!;
+
+                    var info = new FileInfo(path);
+                }
+                else
+                {
+                    _version = "-";
+                }
             }
             catch
             {
+
+            }
+
+        }
+
+        private ObservableCollection<FileTree> LoadChildren()
+        {
+            if (!IsDirectory)
+            {
                 return null;
             }
-        }
-
-        private void ChangePathChildren(FileTreeNodeModel changedFile)
-        {
-            foreach (var child in changedFile.Children.ToList())
+            var options = new EnumerationOptions()
             {
-                child.Path = Path.Combine(changedFile.Path, child.Name);
-                if (Directory.Exists(child.Path))
-                {
-                    ChangePathChildren(child);
-                }
-            }
-        }
+                IgnoreInaccessible = true,
+                AttributesToSkip = default
+            };
+            var result = new ObservableCollection<FileTree>();
 
-        private void ChangePathToTheRootFolder(FileTreeNodeModel fileTreeParent, string changedFilePath)
-        {
-            int countSeparatorsChangedFilePath = changedFilePath.Count(c =>
-                c == Path.DirectorySeparatorChar || c == Path.AltDirectorySeparatorChar);
-            string newTreeParentPath = changedFilePath;
-            char[] separators = new[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar };
-            string[] partsParentPath = fileTreeParent.Path.Split(separators, StringSplitOptions.RemoveEmptyEntries);
-            for (int i = 0; i < partsParentPath.Length; i++)
+            foreach (var d in Directory.EnumerateDirectories(Path, "*", options))
             {
-                if (i >= countSeparatorsChangedFilePath + 1)
-                    newTreeParentPath = Path.Combine(newTreeParentPath, partsParentPath[i]);
+                result.Add(new FileTree(d, true, this));
             }
 
-            fileTreeParent.Path = newTreeParentPath;
-        }
-
-        private void ClearOpenFolderForm()
-        {
-            try
+            foreach (var f in Directory.EnumerateFiles(Path, "*", options))
             {
-                OpenedFolder.Path = "Исходный путь отсутствует!";
-                foreach (var child in OpenedFolder.Children.ToList())
-                {
-                    OpenedFolder.Children.Remove(child);
-                }
+                result.Add(new FileTree(f, false, this));
+            }
 
-                OpenedFolder.Parent = null;
-            }
-            catch (Exception ex)
-            {
-            }
+            if (result.Count == 0)
+                HasChildren = false;
+
+            return result;
         }
     }
 }
-
-
-#region Last
-//using Avalonia.Threading;
-//using AvaloniaApplication1.Helper;
-//using ReactiveUI;
-//using System;
-//using System.IO;
-//using System.Linq;
-//using NLog;
-//using System.Threading.Tasks;
-//using System.Collections.Generic;
-//using Microsoft.VisualBasic;
-
-//namespace AvaloniaApplication1.Models
-//{
-//    public class FileTree : ReactiveObject
-//    {
-
-//        //WSL
-//        //private string _rootFolderPath = "/home/orpo/1";
-//        //private string _startWatcherPath = "/home";
-
-//        //Windows
-//        //private string _rootFolderPath = "C:\\1\\2";
-//        //private string _startWatcherPath = "C:\\";
-
-//        //Astra
-//        private string _rootFolderPath = "/home/orpo/Desktops/Desktop1/1";
-//        private string _startWatcherPath = "/";
-
-//        private static FileTreeNodeModel _openedFolder;
-//        private static FileSystemWatcher _watcher;
-
-//        public FileTreeNodeModel OpenedFolder { get => _openedFolder; set => this.RaiseAndSetIfChanged(ref _openedFolder, value); }
-
-//        public FileTree()
-//        {
-//            _openedFolder = new FileTreeNodeModel(_rootFolderPath, Directory.Exists(_rootFolderPath));
-//            StartWatch();
-//        }
-
-//        private void StartWatch()
-//        {
-//            _watcher = new FileSystemWatcher()
-//            {
-//                Path = _startWatcherPath,
-//                EnableRaisingEvents = true,
-//                IncludeSubdirectories = true,
-//                NotifyFilter = NotifyFilters.LastWrite |
-//                               NotifyFilters.FileName |
-//                               NotifyFilters.DirectoryName |
-//                               NotifyFilters.Size,
-//            };
-//            _watcher.Created += CreatedFile;
-//            _watcher.Deleted += DeleteFile;
-//            _watcher.Renamed += RenamedFile;
-//        }
-//        private void DeliteIdentialFile(FileTreeNodeModel parent, string pathAddFile)
-//        {
-//            var duplicates = parent.Children.Where(x => x.Path == pathAddFile)
-//                                           .GroupBy(x => x)
-//                                           .Where(g => g.Count() > 1)
-//                                           .Select(g => g.Key)
-//                                           .ToList();
-
-//            foreach (var duplicate in duplicates)
-//            {
-//                parent.Children.Remove(duplicate);
-//            }
-//        }
-//        private void CreatedFile(object sender, FileSystemEventArgs e)
-//        {
-//            Dispatcher.UIThread.Post(() =>
-//            {
-//                if (e.FullPath.StartsWith(_rootFolderPath))
-//                {
-//                    if (e.FullPath.Count(c => c == Path.DirectorySeparatorChar || c == Path.AltDirectorySeparatorChar) >=
-//                            _rootFolderPath.Count(c => c == Path.DirectorySeparatorChar || c == Path.AltDirectorySeparatorChar) &&
-//                            e.FullPath.StartsWith(_rootFolderPath))
-//                    {
-//                        string pathParentFolder = Path.GetDirectoryName(e.FullPath);
-//                        var parent = SearchFile(pathParentFolder);
-//                        if (parent != null)
-//                        {
-//                            try
-//                            {
-//                                foreach (var item in parent.Children.ToList())
-//                                {
-//                                    if (item.Path == e.FullPath)
-//                                        return;
-//                                }
-//                                var addFile = new FileTreeNodeModel(e.FullPath, Directory.Exists(e.FullPath), parent);
-//                                addFile.IsChecked = addFile.Parent.IsChecked == false || addFile.Parent == null ? false : true;
-//                                addFile.HasChildren = addFile.IsDirectory && addFile.Children.Count != 0 || addFile.Children != null ? true : false;
-//                                addFile.Parent.HasChildren = true;
-//                                parent.Children.Add(addFile);
-//                                DeliteIdentialFile(parent, e.FullPath);
-//                            }
-//                            catch (Exception ex)
-//                            {
-//                                DeliteIdentialFile(parent, e.FullPath);
-//                            }
-//                        }
-//                    }
-//                }
-//            });
-//        }
-//        private void DeleteFile(object sender, FileSystemEventArgs e)
-//        {
-//            Dispatcher.UIThread.Post(() =>
-//            {
-//                if (e.FullPath.StartsWith(_rootFolderPath) || _rootFolderPath.StartsWith(e.FullPath))
-//                {
-//                    if (OpenedFolder.Path.StartsWith(e.FullPath) && (e.FullPath.Count(c => c == Path.DirectorySeparatorChar || c == Path.AltDirectorySeparatorChar) <=
-//                        _rootFolderPath.Count(c => c == Path.DirectorySeparatorChar || c == Path.AltDirectorySeparatorChar)) &&
-//                        e.FullPath.Length <= _rootFolderPath.Length)
-//                    {
-//                        ClearOpenFolderForm(OpenedFolder);
-//                        return;
-//                    }
-
-//                    else if (OpenedFolder.Path.StartsWith(e.FullPath) || (OpenedFolder.Path.StartsWith(e.FullPath) || e.FullPath.Count(c => c == Path.DirectorySeparatorChar || c == Path.AltDirectorySeparatorChar) >
-//                    OpenedFolder.Path.Count(c => c == Path.DirectorySeparatorChar || c == Path.AltDirectorySeparatorChar)))
-//                    {
-//                        try
-//                        {
-//                            var parent = SearchFile(e.FullPath);
-//                            foreach (var file in parent.Parent.Children.ToList())
-//                            {
-//                                if (file.Path == e.FullPath)
-//                                {
-//                                    parent.Parent.Children.Remove(file);
-//                                }
-//                                if (file.Path == e.FullPath && OpenedFolder.Path.StartsWith(e.FullPath))
-//                                    OpenedFolder = parent.Parent;
-//                            }
-//                        }
-//                        catch
-//                        {
-
-//                        }
-//                    }
-//                    else
-//                    {
-//                        var parentFolder = SearchFile(Path.GetDirectoryName(e.FullPath));
-//                        try
-//                        {
-//                            foreach (var children in parentFolder.Children.ToList())
-//                            {
-//                                if (children.Path == e.FullPath)
-//                                {
-//                                    parentFolder.Children.Remove(children);
-//                                }
-//                            }
-//                        }
-//                        catch
-//                        {
-
-//                        }
-//                    }
-//                }
-//            });
-
-//        }
-//        private void RenamedFile(object sender, RenamedEventArgs e)
-//        {
-//            Dispatcher.UIThread.Post(() =>
-//            {
-//                //if (!e.FullPath.StartsWith(/*_rootFolderPath */"C:\\Users"))
-//                if (e.FullPath.StartsWith(_rootFolderPath) || _rootFolderPath.StartsWith(e.OldFullPath))
-//                {
-//                    bool a = OpenedFolder.Path.StartsWith(e.OldFullPath);
-//                    bool b = (e.OldFullPath.Count(c => c == Path.DirectorySeparatorChar || c == Path.AltDirectorySeparatorChar) <=
-//                        _rootFolderPath.Count(c => c == Path.DirectorySeparatorChar || c == Path.AltDirectorySeparatorChar));
-//                    bool c = e.OldFullPath.Length <= _rootFolderPath.Length;
-
-
-
-//                    if (OpenedFolder.Path.StartsWith(e.OldFullPath) && (e.FullPath.Count(c => c == Path.DirectorySeparatorChar || c == Path.AltDirectorySeparatorChar) <=
-//                        _rootFolderPath.Count(c => c == Path.DirectorySeparatorChar || c == Path.AltDirectorySeparatorChar)) &&
-//                        e.OldFullPath.Length <= _rootFolderPath.Length)
-//                    {
-//                        //ChangePathToTheRootFolder(OpenedFolder, e.FullPath);
-//                        //ChangePathChildren(OpenedFolder);
-//                        ClearOpenFolderForm(OpenedFolder);
-//                    }
-//                    else
-//                    {
-//                        try
-//                        {
-//                            var changedFile = SearchFile(e.OldFullPath);
-//                            foreach (var file in changedFile.Parent.Children.ToList())
-//                            {
-//                                if (file.Name == Path.GetFileName(e.FullPath))
-//                                {
-//                                    changedFile.Parent.Children.Remove(file);
-//                                }
-//                            }
-//                            if (changedFile != null)
-//                            {
-//                                changedFile.Path = e.FullPath;
-//                                changedFile.Name = Path.GetFileName(e.FullPath);
-//                                ChangePathChildren(changedFile);
-//                            }
-//                            StartWatch();
-//                        }
-//                        catch
-//                        {
-//                            StartWatch();
-//                        }
-//                    }
-//                }
-//            });
-//        }
-
-//        public void GoToFolder(FileTreeNodeModel selectedFile)
-//        {
-//            if (selectedFile != null && Directory.Exists(selectedFile.Path))
-//            {
-//                OpenedFolder = selectedFile;
-//            }
-//        }
-//        public void GoBackFolder()
-//        {
-//            if (OpenedFolder != null && OpenedFolder.Parent != null)
-//            {
-//                OpenedFolder = OpenedFolder.Parent;
-//            }
-//        }
-
-//        private FileTreeNodeModel SearchFile(string searchedFilePath)
-//        {
-//            {
-//                if (OpenedFolder.Path == searchedFilePath)
-//                    return OpenedFolder;
-//                else if (searchedFilePath.StartsWith(OpenedFolder.Path))
-//                    return SearchChildren(searchedFilePath, OpenedFolder);
-//                else if (OpenedFolder.Path.StartsWith(searchedFilePath))
-//                    return SearchTreeParent(searchedFilePath, OpenedFolder);
-//                else
-//                    return SearchChildren(searchedFilePath, SearchTreeParent(searchedFilePath, OpenedFolder));
-//            }
-//        }
-//        private FileTreeNodeModel SearchTreeParent(string searchedFilePath, FileTreeNodeModel openedFolder)
-//        {
-//            return searchedFilePath.StartsWith(openedFolder.Path) ? openedFolder : SearchTreeParent(searchedFilePath, openedFolder.Parent);
-//        }
-//        private FileTreeNodeModel SearchChildren(string searchedFilePath, FileTreeNodeModel rootFolder)
-//        {
-//            var maxMatchFile1 = rootFolder.Children.ToList().Where(x => searchedFilePath.StartsWith(x.Path)).OrderByDescending(x => x.Path.Length).FirstOrDefault();
-//            try
-//            {
-//                return maxMatchFile1.Path == searchedFilePath ? maxMatchFile1 : SearchChildren(searchedFilePath, maxMatchFile1);
-//            }
-//            catch
-//            {
-//                return null;
-//            }
-//        }
-//        private void ChangePathChildren(FileTreeNodeModel changedFile)
-//        {
-//            foreach (var child in changedFile.Children.ToList())
-//            {
-//                child.Path = Path.Combine(changedFile.Path, child.Name);
-//                if (Directory.Exists(child.Path))
-//                {
-//                    ChangePathChildren(child);
-//                }
-
-//            }
-//        }
-//        private void ChangePathToTheRootFolder(FileTreeNodeModel fileTreeParent, string changedFilePath)
-//        {
-//            int countSeparatorsChangedFilePath = changedFilePath.Count(c => c == Path.DirectorySeparatorChar || c == Path.AltDirectorySeparatorChar);
-//            string newTreeParentPath = changedFilePath;
-//            char[] separators = new[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar };
-//            string[] partsParentPath = fileTreeParent.Path.Split(separators, StringSplitOptions.RemoveEmptyEntries);
-//            for (int i = 0; i < partsParentPath.Length; i++)
-//            {
-//                if (i >= countSeparatorsChangedFilePath + 1)
-//                    newTreeParentPath = Path.Combine(newTreeParentPath, partsParentPath[i]);
-//            }
-//            fileTreeParent.Path = newTreeParentPath;
-//        }
-//        private void ClearOpenFolderForm(FileTreeNodeModel openedFolder)
-//        {
-//            try
-//            {
-//                openedFolder.Path = "Исходный путь отсутствует!";
-//                foreach (var child in openedFolder.Children.ToList())
-//                {
-//                    openedFolder.Children.Remove(child);
-//                }
-//                openedFolder.Parent = null;
-//            }
-//            catch (Exception ex)
-//            {
-
-//            }
-//        }
-//    }
-//}
-#endregion

@@ -19,14 +19,14 @@ namespace AvaloniaApplication1.ViewModels
     public class MainWindowViewModel : ViewModelBase
     {
         private static IconConverter? s_iconConverter;
-        private static FileTree _fileTree = new FileTree();
+        private static FileTreeModel _fileTree = new FileTreeModel();
 
 
         #region PROPERTIES
         public string Extensions { get => ".exe/ .jpeg/ .png"; }
 
-        public static FileTree OpenedFolder { get => _fileTree; }
-        public IEnumerable<FileTreeNodeModel> FilteredItems
+        public static FileTreeModel OpenedFolder { get => _fileTree; }
+        public IEnumerable<FileTree> FilteredItems
         {
             get
             {
@@ -35,7 +35,7 @@ namespace AvaloniaApplication1.ViewModels
             }
         }
 
-        public FileTree FileTree { get { return _fileTree; } set { this.RaiseAndSetIfChanged(ref _fileTree, value); } }
+        public FileTreeModel FileTree { get { return _fileTree; } set { this.RaiseAndSetIfChanged(ref _fileTree, value); } }
 
         public static IMultiValueConverter FileIconConverter
         {
@@ -59,7 +59,7 @@ namespace AvaloniaApplication1.ViewModels
         #endregion
 
         #region COMMANDS
-        public void GoToFolderCommand(FileTreeNodeModel selectedFile)
+        public void GoToFolderCommand(FileTree selectedFile)
         {
             if (selectedFile != null && Directory.Exists(selectedFile.Path))
             {

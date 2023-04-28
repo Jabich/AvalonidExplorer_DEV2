@@ -41,7 +41,7 @@
 		</StackPanel>
 
 		<ListBox Grid.Row="1" BorderThickness="1" Width="380" Height="330" Margin="0,22,0,0"
-				 Items="{Binding FilteredItems}" HotKeyManager.HotKey="Right">
+				 Items="{Binding FileTree.OpenedFolder.Children}" HotKeyManager.HotKey="Right">
 			<ListBox.KeyBindings>
 				<KeyBinding Gesture="Right" Command="{Binding GoToFolderCommand}"
 							                CommandParameter="{Binding RelativeSource={RelativeSource Self}, Path=SelectedItem}"/>
