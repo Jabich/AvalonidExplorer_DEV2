@@ -12,7 +12,8 @@ namespace AvaloniaApplication1.Models
 {
     public class MainModel : ReactiveObject
     {
-        private string _pathRootFolder = "C:\\1\\2";
+        //private string _pathRootFolder = "C:\\1\\2";
+        private string _pathRootFolder = "/home/orpo/Desktop/1/2";
         public static FileTree _fileTree;
         public static Watcher _watcher;
 

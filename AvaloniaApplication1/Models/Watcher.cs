@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace AvaloniaApplication1.Models
 {
-    public class Watcher: ReactiveObject
+    public class Watcher : ReactiveObject
     {
         public FileSystemWatcher _watcher;
         private static string _rootFolderPath;
@@ -56,44 +56,52 @@ namespace AvaloniaApplication1.Models
         {
             Dispatcher.UIThread.Post(() =>
             {
-                if (e.FullPath.StartsWith(_rootFolderPath))
+                try
                 {
-                    if (e.FullPath.Count(c =>
-                            c == Path.DirectorySeparatorChar || c == Path.AltDirectorySeparatorChar) >=
-                        _rootFolderPath.Count(c =>
-                            c == Path.DirectorySeparatorChar || c == Path.AltDirectorySeparatorChar) &&
-                        e.FullPath.StartsWith(_rootFolderPath))
+                    if (e.FullPath.StartsWith(_rootFolderPath))
                     {
-                        string pathParentFolder = Path.GetDirectoryName(e.FullPath);
-                        var parent = MainModel.SearchFile(pathParentFolder);
-                        if (parent != null)
+                        if (e.FullPath.Count(c =>
+                                c == Path.DirectorySeparatorChar || c == Path.AltDirectorySeparatorChar) >=
+                            _rootFolderPath.Count(c =>
+                                c == Path.DirectorySeparatorChar || c == Path.AltDirectorySeparatorChar) &&
+                            e.FullPath.StartsWith(_rootFolderPath))
                         {
-                            try
+                            string pathParentFolder = Path.GetDirectoryName(e.FullPath);
+                            var parent = MainModel.SearchFile(pathParentFolder);
+                            if (parent != null)
                             {
-                                foreach (var item in parent.Children.ToList())
+                                try
                                 {
-                                    if (item.Path == e.FullPath)
-                                        return;
-                                }
+                                    foreach (var item in parent.Children.ToList())
+                                    {
+                                        if (item.Path == e.FullPath)
+                                            return;
+                                    }
 
-                                var addFile = new FileTree(e.FullPath, Directory.Exists(e.FullPath), parent);
-                                addFile.IsChecked = addFile.Parent.IsChecked == false || addFile.Parent == null
-                                    ? false
-                                    : true;
-                                addFile.HasChildren =
-                                    addFile.IsDirectory && addFile.Children.Count != 0 || addFile.Children != null
-                                        ? true
-                                        : false;
-                                addFile.Parent.HasChildren = true;
-                                parent.Children.Add(addFile);
-                            }
-                            catch (Exception ex)
-                            {
-                                Program.logger.Error(ex);
+                                    var addFile = new FileTree(e.FullPath, Directory.Exists(e.FullPath), parent);
+                                    addFile.IsChecked = addFile.Parent.IsChecked == false || addFile.Parent == null
+                                        ? false
+                                        : true;
+                                    addFile.HasChildren =
+                                        addFile.IsDirectory && addFile.Children.Count != 0 || addFile.Children != null
+                                            ? true
+                                            : false;
+                                    addFile.Parent.HasChildren = true;
+                                    parent.Children.Add(addFile);
+                                }
+                                catch (Exception ex)
+                                {
+                                    return;
+                                }
                             }
                         }
                     }
                 }
+                catch (FileNotFoundException ex)
+                {
+                    Program.logger.Error(ex.Message);
+                }
+
             });
         }
 
@@ -101,66 +109,56 @@ namespace AvaloniaApplication1.Models
         {
             Dispatcher.UIThread.Post(() =>
             {
-                if (e.FullPath.StartsWith(_rootFolderPath) || _rootFolderPath.StartsWith(e.FullPath))
+                try
                 {
-                    if (_fileTree.Path.StartsWith(e.FullPath) &&
-                        (e.FullPath.Count(c =>
-                             c == Path.DirectorySeparatorChar || c == Path.AltDirectorySeparatorChar) <=
-                         _rootFolderPath.Count(c =>
-                             c == Path.DirectorySeparatorChar || c == Path.AltDirectorySeparatorChar)) &&
-                        e.FullPath.Length <= _rootFolderPath.Length)
+                    if (e.FullPath.StartsWith(_rootFolderPath) || _rootFolderPath.StartsWith(e.FullPath))
                     {
-                        _mainModel.ClearOpenFolderForm();
-                        return;
-                    }
-
-                    else if (_fileTree.Path.StartsWith(e.FullPath) || (_fileTree.Path.StartsWith(e.FullPath) ||
-                                                                          e.FullPath.Count(c =>
-                                                                              c == Path.DirectorySeparatorChar ||
-                                                                              c == Path.AltDirectorySeparatorChar) >
-                                                                          _fileTree.Path.Count(c =>
-                                                                              c == Path.DirectorySeparatorChar ||
-                                                                              c == Path.AltDirectorySeparatorChar)))
-                    {
-                        try
+                        if (_fileTree.Path.StartsWith(e.FullPath) &&
+                            (e.FullPath.Count(c =>
+                                 c == Path.DirectorySeparatorChar || c == Path.AltDirectorySeparatorChar) <=
+                             _rootFolderPath.Count(c =>
+                                 c == Path.DirectorySeparatorChar || c == Path.AltDirectorySeparatorChar)) &&
+                            e.FullPath.Length <= _rootFolderPath.Length)
                         {
-                            var parent = MainModel.SearchFile(e.FullPath);
-                            foreach (var file in parent.Parent.Children.ToList())
-                            {
-                                if (file.Path == e.FullPath)
-                                {
-                                    parent.Parent.Children.Remove(file);
-                                }
+                            MainModel.ClearOpenFolderForm();
+                            return;
+                        }
 
-                                if (file.Path == e.FullPath && _mainModel.FileTree.Path.StartsWith(e.FullPath))
+                        else
+                        {
+                            try
+                            {
+                                var parent = MainModel.SearchFile(Path.GetDirectoryName(e.FullPath));
+                                foreach (var file in parent.Children.ToList())
                                 {
-                                    MainModel.GoBackFolder();
+                                    if (file.Path == e.FullPath)
+                                    {
+                                        parent.Children.Remove(file);
+                                    }
+
+                                    if (file.Path == e.FullPath && _mainModel.FileTree.Path.StartsWith(e.FullPath) &&
+                                    (_fileTree.Path.StartsWith(e.FullPath) || (_fileTree.Path.StartsWith(e.FullPath) ||
+                                                                         e.FullPath.Count(c =>
+                                                                             c == Path.DirectorySeparatorChar ||
+                                                                             c == Path.AltDirectorySeparatorChar) >
+                                                                         _fileTree.Path.Count(c =>
+                                                                             c == Path.DirectorySeparatorChar ||
+                                                                             c == Path.AltDirectorySeparatorChar))))
+                                    {
+                                        MainModel.GoBackFolder();
+                                    }
                                 }
                             }
-                        }
-                        catch(Exception ex)
-                        {
-                            Program.logger.Error(ex);
-                        }
-                    }
-                    else
-                    {
-                        var parentFolder = MainModel.SearchFile(Path.GetDirectoryName(e.FullPath));
-                        try
-                        {
-                            foreach (var children in parentFolder.Children.ToList())
+                            catch (Exception ex)
                             {
-                                if (children.Path == e.FullPath)
-                                {
-                                    parentFolder.Children.Remove(children);
-                                }
+                                return;
                             }
                         }
-                        catch (Exception ex)
-                        {
-                            Program.logger.Error(ex);
-                        }
                     }
+                }
+                catch (FileNotFoundException ex)
+                {
+                    Program.logger.Error(ex.Message);
                 }
             });
         }
@@ -169,21 +167,22 @@ namespace AvaloniaApplication1.Models
         {
             Dispatcher.UIThread.Post(() =>
             {
-                if (e.FullPath.StartsWith(_rootFolderPath) || _rootFolderPath.StartsWith(e.OldFullPath))
+                try
                 {
-                    if (_fileTree.Path.StartsWith(e.OldFullPath) &&
-                        (e.FullPath.Count(c =>
-                             c == Path.DirectorySeparatorChar || c == Path.AltDirectorySeparatorChar) <=
-                         _rootFolderPath.Count(c =>
-                             c == Path.DirectorySeparatorChar || c == Path.AltDirectorySeparatorChar)) &&
-                        e.OldFullPath.Length <= _rootFolderPath.Length)
+                    if (e.FullPath.StartsWith(_rootFolderPath) || _rootFolderPath.StartsWith(e.OldFullPath))
                     {
-                        _mainModel.ClearOpenFolderForm();
-                    }
-                    else
-                    {
-                        try
+                        if (_fileTree.Path.StartsWith(e.OldFullPath) &&
+                            (e.FullPath.Count(c =>
+                                 c == Path.DirectorySeparatorChar || c == Path.AltDirectorySeparatorChar) <=
+                             _rootFolderPath.Count(c =>
+                                 c == Path.DirectorySeparatorChar || c == Path.AltDirectorySeparatorChar)) &&
+                            e.OldFullPath.Length <= _rootFolderPath.Length)
                         {
+                            _mainModel.ClearOpenFolderForm();
+                        }
+                        else
+                        {
+
                             var changedFile = _mainModel.SearchFile(e.OldFullPath);
                             foreach (var file in changedFile.Parent.Children.ToList())
                             {
@@ -192,22 +191,27 @@ namespace AvaloniaApplication1.Models
                                     changedFile.Parent.Children.Remove(file);
                                 }
                             }
-
                             if (changedFile != null)
                             {
                                 changedFile.Path = e.FullPath;
                                 changedFile.Name = Path.GetFileName(e.FullPath);
-                                _mainModel.ChangePathChildren(changedFile);
-                            }
 
-                            StartWatch();
-                        }
-                        catch (Exception ex)
-                        {
-                            Program.logger.Error(ex);
-                            StartWatch();
+                                if (Directory.Exists(changedFile.Path))
+                                    _mainModel.ChangePathChildren(changedFile);
+                            }
+                            else
+                            {
+                                StartWatch();
+                                return;
+                            }
                         }
                     }
+                }
+
+                catch (Exception ex)
+                {
+                    StartWatch();
+                    return;
                 }
             });
         }
