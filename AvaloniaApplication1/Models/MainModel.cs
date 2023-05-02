@@ -1,4 +1,5 @@
-﻿using Microsoft.CodeAnalysis.CSharp.Syntax;
+﻿using Avalonia.Threading;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using ReactiveUI;
 using System;
 using System.Collections.Generic;
@@ -9,14 +10,15 @@ using System.Threading.Tasks;
 
 namespace AvaloniaApplication1.Models
 {
-    public class MainModel: ReactiveObject
+    public class MainModel : ReactiveObject
     {
-        private string _pathRootFolder = "C:\\1\\2";
-        //private string _pathRootFolder = "/home/orpo/Desktop/1/2";
+        //private string _pathRootFolder = "C:\\1\\2";
+        private string _pathRootFolder = "/home/orpo/Desktop/1/2";
         public static FileTree _fileTree;
         public static Watcher _watcher;
-        public static Logger Logger = new Logger();
 
+
+        //public static Logger Logger = new Logger();
         public FileTree FileTree
         {
             get => _fileTree;
@@ -26,28 +28,43 @@ namespace AvaloniaApplication1.Models
         public MainModel()
         {
             _fileTree = new FileTree(_pathRootFolder, true);
-            _watcher = new Watcher(_pathRootFolder, _fileTree, this);
-            
+            _watcher = new Watcher(_pathRootFolder, FileTree, this);
+
             Task.Run(() =>
             {
                 CheckChangeRootPath();
             });
         }
 
+        //public MainModel(FileTree fileTree)
+        //{
+        //    _fileTree = fileTree;
+        //    _watcher = new Watcher(_pathRootFolder, FileTree, this);
+
+        //    Task.Run(() =>
+        //    {
+        //        CheckChangeRootPath();
+        //    });
+        //}
+
         public void GoToFolder(FileTree selectedFile)
         {
             if (selectedFile != null && Directory.Exists(selectedFile.Path))
             {
                 FileTree = selectedFile;
+                //FileTree.Children.Clear();
+                //FileTree = new FileTree("C:\\Users\\ORPO\\Desktop\\AstraLinuxFoldr", true);
             }
         }
 
         public void GoBackFolder()
         {
+
             if (_fileTree != null && _fileTree.Parent != null)
             {
                 FileTree = FileTree.Parent;
             }
+
         }
 
         public FileTree SearchFile(string searchedFilePath)
@@ -121,7 +138,7 @@ namespace AvaloniaApplication1.Models
             {
                 if (!Directory.Exists(_pathRootFolder))
                     ClearOpenFolderForm();
-              
+
             }
         }
         public void TEST(FileTree fileTree)

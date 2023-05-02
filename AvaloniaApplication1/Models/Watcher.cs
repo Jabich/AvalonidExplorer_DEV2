@@ -1,4 +1,5 @@
 ﻿using Avalonia.Threading;
+using AvaloniaApplication1.ViewModels;
 using DynamicData.Experimental;
 using ReactiveUI;
 using System;
@@ -6,6 +7,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace AvaloniaApplication1.Models
@@ -20,6 +22,11 @@ namespace AvaloniaApplication1.Models
         {
             get => _mainModel;
             set => this.RaiseAndSetIfChanged(ref _mainModel, value);
+        }
+        public FileTree FileTree
+        {
+            get => _fileTree;
+            set => this.RaiseAndSetIfChanged(ref _fileTree, value);
         }
         public Watcher(string rootFolderPath, FileTree fileTree, MainModel mainModel)
         {
@@ -58,7 +65,7 @@ namespace AvaloniaApplication1.Models
                         e.FullPath.StartsWith(_rootFolderPath))
                     {
                         string pathParentFolder = Path.GetDirectoryName(e.FullPath);
-                        var parent = _mainModel.SearchFile(pathParentFolder);
+                        var parent = MainModel.SearchFile(pathParentFolder);
                         if (parent != null)
                         {
                             try
@@ -120,35 +127,40 @@ namespace AvaloniaApplication1.Models
                     {
                         try
                         {
-                            var parent = _mainModel.SearchFile(e.FullPath);
+                            var parent = MainModel.SearchFile(e.FullPath);
                             foreach (var file in parent.Parent.Children.ToList())
                             {
                                 if (file.Path == e.FullPath)
                                 {
                                     parent.Parent.Children.Remove(file);
+                                    //MainModel.FileTree = new FileTree("C:\\Users\\ORPO\\Desktop\\AstraLinuxFoldr", true);
+                                    //FileTree.Children.Clear();
+                                    //MainModel.GoBackFolder();
+                                    //MainModel.FileTree = parent.Parent.Parent;
+
+
+                                    //MainModel.FileTree.Children.Clear();
+                                    //FileTree = new FileTree("C:\\Users\\ORPO\\Desktop\\AstraLinuxFoldr", true);
                                 }
 
                                 if (file.Path == e.FullPath && _mainModel.FileTree.Path.StartsWith(e.FullPath))
                                 {
-                                    //MainModel.FileTree = parent.Parent;
-                                    //_mainModel.FileTree = parent.Parent;
-
                                     MainModel.GoBackFolder();
-                                    //MainModel.TEST(parent);
-                                    //var fsdsdfsd = MainModel.FileTree;
+                                    //var gkjghj = MainWindowViewModel.MainModel.FileTree;
                                 }
                             }
+                            //var dfgdfg = MainWindowViewModel.MainModel.FileTree;
                         }
                         catch
                         {
+                            //var dfgdfg = MainWindowViewModel.MainModel.FileTree;
                             //Logger.logger.Info("22222");
                             Program.logger.Error("awdwad");
-
                         }
                     }
                     else
                     {
-                        var parentFolder = _mainModel.SearchFile(Path.GetDirectoryName(e.FullPath));
+                        var parentFolder = MainModel.SearchFile(Path.GetDirectoryName(e.FullPath));
                         try
                         {
                             foreach (var children in parentFolder.Children.ToList())
