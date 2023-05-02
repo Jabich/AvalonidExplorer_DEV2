@@ -16,7 +16,7 @@ namespace AvaloniaApplication1.Models
         public static FileTree _fileTree;
         public static Watcher _watcher;
         public static Logger Logger = new Logger();
-        
+
         public FileTree FileTree
         {
             get => _fileTree;

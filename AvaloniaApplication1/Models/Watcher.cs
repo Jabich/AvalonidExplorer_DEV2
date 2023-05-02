@@ -130,7 +130,7 @@ namespace AvaloniaApplication1.Models
 
                                 if (file.Path == e.FullPath && _mainModel.FileTree.Path.StartsWith(e.FullPath))
                                 {
-                                    MainModel.FileTree = parent.Parent;
+                                    //MainModel.FileTree = parent.Parent;
                                     //_mainModel.FileTree = parent.Parent;
 
                                     MainModel.GoBackFolder();
