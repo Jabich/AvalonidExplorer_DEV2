@@ -69,7 +69,6 @@ namespace AvaloniaApplication1.Models
 
         public bool IsDirectory { get; }
         public FileTree? Parent { get; set; }
-        //public ObservableCollection<FileTree> Children => _children ??= LoadChildren();
         public ObservableCollection<FileTree> Children
         {
             get => _children ??= LoadChildren();

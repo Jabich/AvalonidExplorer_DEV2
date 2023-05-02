@@ -89,10 +89,7 @@ namespace AvaloniaApplication1.Models
                             }
                             catch (Exception ex)
                             {
-                                Program.logger.Error("awdwad");
-
-                                //logger.logger.Info($"Файл {ex.Message} - {e.Name} уже был создан");
-                                //logger.Info($"Файл {ex.Message} - {e.Name} уже был создан");
+                                Program.logger.Error(ex);
                             }
                         }
                     }
@@ -133,29 +130,17 @@ namespace AvaloniaApplication1.Models
                                 if (file.Path == e.FullPath)
                                 {
                                     parent.Parent.Children.Remove(file);
-                                    //MainModel.FileTree = new FileTree("C:\\Users\\ORPO\\Desktop\\AstraLinuxFoldr", true);
-                                    //FileTree.Children.Clear();
-                                    //MainModel.GoBackFolder();
-                                    //MainModel.FileTree = parent.Parent.Parent;
-
-
-                                    //MainModel.FileTree.Children.Clear();
-                                    //FileTree = new FileTree("C:\\Users\\ORPO\\Desktop\\AstraLinuxFoldr", true);
                                 }
 
                                 if (file.Path == e.FullPath && _mainModel.FileTree.Path.StartsWith(e.FullPath))
                                 {
                                     MainModel.GoBackFolder();
-                                    //var gkjghj = MainWindowViewModel.MainModel.FileTree;
                                 }
                             }
-                            //var dfgdfg = MainWindowViewModel.MainModel.FileTree;
                         }
-                        catch
+                        catch(Exception ex)
                         {
-                            //var dfgdfg = MainWindowViewModel.MainModel.FileTree;
-                            //Logger.logger.Info("22222");
-                            Program.logger.Error("awdwad");
+                            Program.logger.Error(ex);
                         }
                     }
                     else
@@ -173,8 +158,7 @@ namespace AvaloniaApplication1.Models
                         }
                         catch (Exception ex)
                         {
-                            //Logger.logger.Info("22222");
-                            Program.logger.Error("awdwad");
+                            Program.logger.Error(ex);
                         }
                     }
                 }
@@ -185,7 +169,6 @@ namespace AvaloniaApplication1.Models
         {
             Dispatcher.UIThread.Post(() =>
             {
-                //if (!e.FullPath.StartsWith(/*_rootFolderPath */"C:\\Users"))
                 if (e.FullPath.StartsWith(_rootFolderPath) || _rootFolderPath.StartsWith(e.OldFullPath))
                 {
                     if (_fileTree.Path.StartsWith(e.OldFullPath) &&
@@ -221,8 +204,7 @@ namespace AvaloniaApplication1.Models
                         }
                         catch (Exception ex)
                         {
-                            Program.logger.Error("awdwad");
-                            //Logger.logger.Info("22222");
+                            Program.logger.Error(ex);
                             StartWatch();
                         }
                     }

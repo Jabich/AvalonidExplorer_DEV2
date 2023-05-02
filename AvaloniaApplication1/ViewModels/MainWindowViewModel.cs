@@ -19,18 +19,10 @@ namespace AvaloniaApplication1.ViewModels
     public class MainWindowViewModel : ViewModelBase
     {
         private static IconConverter? s_iconConverter;
-        private static FileTree _fileTree = new FileTree("C:\\1\\2", true);
 
-        private static MainModel _mainModel/* = new MainModel(FileTree)*/;
-
-        public MainWindowViewModel()
-        {
-            _mainModel = new MainModel();
-        }
-
+        private static MainModel _mainModel = new MainModel();
         public static MainModel MainModel { get { return _mainModel; } }
 
-        public FileTree FileTree { get { return _fileTree; } set { this.RaiseAndSetIfChanged(ref _fileTree, value); } }
         #region PROPERTIES
         public string Extensions { get => ".exe/ .jpeg/ .png"; }
 

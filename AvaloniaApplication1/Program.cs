@@ -27,10 +27,10 @@ namespace AvaloniaApplication1
         [STAThread]
         public static void Main(string[] args)
         {
-            BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
             config.AddTarget(fileTarget);
             config.AddRule(rule);
             LogManager.Configuration = config;
+            BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
         } 
 
         // Avalonia configuration, don't remove; also used by visual designer.
@@ -39,9 +39,5 @@ namespace AvaloniaApplication1
                 .UsePlatformDetect()
                 .LogToTrace()
                 .UseReactiveUI();
-        private void CreateLogger()
-        {
-
-        }
     }
 }

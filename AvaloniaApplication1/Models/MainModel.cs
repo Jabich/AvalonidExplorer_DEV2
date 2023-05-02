@@ -12,13 +12,10 @@ namespace AvaloniaApplication1.Models
 {
     public class MainModel : ReactiveObject
     {
-        //private string _pathRootFolder = "C:\\1\\2";
-        private string _pathRootFolder = "/home/orpo/Desktop/1/2";
+        private string _pathRootFolder = "C:\\1\\2";
         public static FileTree _fileTree;
         public static Watcher _watcher;
 
-
-        //public static Logger Logger = new Logger();
         public FileTree FileTree
         {
             get => _fileTree;
@@ -36,24 +33,11 @@ namespace AvaloniaApplication1.Models
             });
         }
 
-        //public MainModel(FileTree fileTree)
-        //{
-        //    _fileTree = fileTree;
-        //    _watcher = new Watcher(_pathRootFolder, FileTree, this);
-
-        //    Task.Run(() =>
-        //    {
-        //        CheckChangeRootPath();
-        //    });
-        //}
-
         public void GoToFolder(FileTree selectedFile)
         {
             if (selectedFile != null && Directory.Exists(selectedFile.Path))
             {
                 FileTree = selectedFile;
-                //FileTree.Children.Clear();
-                //FileTree = new FileTree("C:\\Users\\ORPO\\Desktop\\AstraLinuxFoldr", true);
             }
         }
 
@@ -100,7 +84,7 @@ namespace AvaloniaApplication1.Models
             }
             catch (Exception ex)
             {
-                //Logger.logger.Info("22222");
+                Program.logger.Error(ex);
                 return null;
             }
         }
@@ -130,6 +114,7 @@ namespace AvaloniaApplication1.Models
             }
             catch (Exception ex)
             {
+                Program.logger.Error(ex);
             }
         }
         private void CheckChangeRootPath()
@@ -140,10 +125,6 @@ namespace AvaloniaApplication1.Models
                     ClearOpenFolderForm();
 
             }
-        }
-        public void TEST(FileTree fileTree)
-        {
-            FileTree = fileTree.Parent;
         }
     }
 }
