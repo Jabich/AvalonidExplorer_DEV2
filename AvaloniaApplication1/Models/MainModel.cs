@@ -12,6 +12,7 @@ namespace AvaloniaApplication1.Models
     public class MainModel: ReactiveObject
     {
         private string _pathRootFolder = "C:\\1\\2";
+        //private string _pathRootFolder = "/home/orpo/Desktop/1/2";
         public static FileTree _fileTree;
         public static Watcher _watcher;
         public static Logger Logger = new Logger();
@@ -82,7 +83,7 @@ namespace AvaloniaApplication1.Models
             }
             catch (Exception ex)
             {
-                Logger.logger.Info("22222");
+                //Logger.logger.Info("22222");
                 return null;
             }
         }

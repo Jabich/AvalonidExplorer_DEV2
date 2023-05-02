@@ -82,6 +82,8 @@ namespace AvaloniaApplication1.Models
                             }
                             catch (Exception ex)
                             {
+                                Program.logger.Error("awdwad");
+
                                 //logger.logger.Info($"Файл {ex.Message} - {e.Name} уже был создан");
                                 //logger.Info($"Файл {ex.Message} - {e.Name} уже был создан");
                             }
@@ -128,7 +130,7 @@ namespace AvaloniaApplication1.Models
 
                                 if (file.Path == e.FullPath && _mainModel.FileTree.Path.StartsWith(e.FullPath))
                                 {
-                                    //MainModel.FileTree = parent.Parent;
+                                    MainModel.FileTree = parent.Parent;
                                     //_mainModel.FileTree = parent.Parent;
 
                                     MainModel.GoBackFolder();
@@ -139,7 +141,9 @@ namespace AvaloniaApplication1.Models
                         }
                         catch
                         {
-                            Logger.logger.Info("22222");
+                            //Logger.logger.Info("22222");
+                            Program.logger.Error("awdwad");
+
                         }
                     }
                     else
@@ -157,7 +161,8 @@ namespace AvaloniaApplication1.Models
                         }
                         catch (Exception ex)
                         {
-                            Logger.logger.Info("22222");
+                            //Logger.logger.Info("22222");
+                            Program.logger.Error("awdwad");
                         }
                     }
                 }
@@ -204,7 +209,8 @@ namespace AvaloniaApplication1.Models
                         }
                         catch (Exception ex)
                         {
-                            Logger.logger.Info("22222");
+                            Program.logger.Error("awdwad");
+                            //Logger.logger.Info("22222");
                             StartWatch();
                         }
                     }
