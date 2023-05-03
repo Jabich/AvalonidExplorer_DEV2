@@ -1,18 +1,12 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Data.Converters;
-using Avalonia.Input;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using AvaloniaApplication1.Helper;
 using AvaloniaApplication1.Models;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using ReactiveUI;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Windows.Input;
 
 namespace AvaloniaApplication1.ViewModels
 {

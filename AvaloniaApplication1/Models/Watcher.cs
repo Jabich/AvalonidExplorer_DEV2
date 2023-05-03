@@ -1,14 +1,8 @@
 ﻿using Avalonia.Threading;
-using AvaloniaApplication1.ViewModels;
-using DynamicData.Experimental;
 using ReactiveUI;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace AvaloniaApplication1.Models
 {
@@ -51,49 +45,38 @@ namespace AvaloniaApplication1.Models
             _watcher.Deleted += DeleteFile;
             _watcher.Renamed += RenamedFile;
         }
-
+        /// <summary>
+        /// Метод обработчик FSW
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void CreatedFile(object sender, FileSystemEventArgs e)
         {
             Dispatcher.UIThread.Post(() =>
             {
                 try
                 {
-                    if (e.FullPath.StartsWith(_rootFolderPath))
+                    string pathParentFolder = Path.GetDirectoryName(e.FullPath);
+                    var parent = MainModel.SearchFile(pathParentFolder);
+                    if (parent != null)
                     {
-                        if (e.FullPath.Count(c =>
-                                c == Path.DirectorySeparatorChar || c == Path.AltDirectorySeparatorChar) >=
-                            _rootFolderPath.Count(c =>
-                                c == Path.DirectorySeparatorChar || c == Path.AltDirectorySeparatorChar) &&
-                            e.FullPath.StartsWith(_rootFolderPath))
+                        try
                         {
-                            string pathParentFolder = Path.GetDirectoryName(e.FullPath);
-                            var parent = MainModel.SearchFile(pathParentFolder);
-                            if (parent != null)
+                            foreach (var item in parent.Children.ToList())
                             {
-                                try
-                                {
-                                    foreach (var item in parent.Children.ToList())
-                                    {
-                                        if (item.Path == e.FullPath)
-                                            return;
-                                    }
-
-                                    var addFile = new FileTree(e.FullPath, Directory.Exists(e.FullPath), parent);
-                                    addFile.IsChecked = addFile.Parent.IsChecked == false || addFile.Parent == null
-                                        ? false
-                                        : true;
-                                    addFile.HasChildren =
-                                        addFile.IsDirectory && addFile.Children.Count != 0 || addFile.Children != null
-                                            ? true
-                                            : false;
-                                    addFile.Parent.HasChildren = true;
-                                    parent.Children.Add(addFile);
-                                }
-                                catch (Exception ex)
-                                {
+                                if (item.Path == e.FullPath)
                                     return;
-                                }
                             }
+
+                            var addFile = new FileTree(e.FullPath, Directory.Exists(e.FullPath), parent);
+                            addFile.IsChecked = addFile.Parent != null && addFile.Parent.IsChecked != false;
+                            addFile.HasChildren = addFile.IsDirectory && addFile.Children.Count != 0 || addFile.Children != null;
+                            addFile.Parent.HasChildren = true;
+                            parent.Children.Add(addFile);
+                        }
+                        catch (Exception ex)
+                        {
+                            return;
                         }
                     }
                 }
@@ -104,7 +87,11 @@ namespace AvaloniaApplication1.Models
 
             });
         }
-
+        /// <summary>
+        /// Метод обработчик FSW
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void DeleteFile(object sender, FileSystemEventArgs e)
         {
             Dispatcher.UIThread.Post(() =>
@@ -162,7 +149,11 @@ namespace AvaloniaApplication1.Models
                 }
             });
         }
-
+        /// <summary>
+        /// Метод обработчик FSW
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void RenamedFile(object sender, RenamedEventArgs e)
         {
             Dispatcher.UIThread.Post(() =>
@@ -207,11 +198,10 @@ namespace AvaloniaApplication1.Models
                         }
                     }
                 }
-
-                catch (Exception ex)
+                catch (FileNotFoundException ex)
                 {
                     StartWatch();
-                    return;
+                    Program.logger.Error(ex);
                 }
             });
         }

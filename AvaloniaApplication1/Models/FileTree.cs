@@ -17,13 +17,9 @@ namespace AvaloniaApplication1.Models
         #region FIELDS
         private string _path;
         private string _name;
-        private long? _size;
-        private DateTimeOffset? _modified;
         private ObservableCollection<FileTree>? _children;
         private bool _hasChildren = true;
         private bool _isExpanded;
-        private string _version;
-        private string? _hashSum;
         private bool _isChecked;
         #endregion
 
