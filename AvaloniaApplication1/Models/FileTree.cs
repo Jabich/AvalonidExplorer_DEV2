@@ -13,7 +13,6 @@ namespace AvaloniaApplication1.Models
 {
     public class FileTree : ReactiveObject
     {
-        public static FileSystemWatcher _watcherSecond;
         #region FIELDS
         private string _path;
         private string _name;
@@ -65,7 +64,7 @@ namespace AvaloniaApplication1.Models
 
         public bool IsDirectory { get; }
         public FileTree? Parent { get; set; }
-        public ObservableCollection<FileTree> Children
+        public ObservableCollection<FileTree>? Children
         {
             get => _children ??= LoadChildren();
             set => this.RaiseAndSetIfChanged(ref _children, value);
@@ -83,7 +82,7 @@ namespace AvaloniaApplication1.Models
             Parent = parent;
         }
 
-        private ObservableCollection<FileTree> LoadChildren()
+        private ObservableCollection<FileTree>? LoadChildren()
         {
             if (!IsDirectory)
             {

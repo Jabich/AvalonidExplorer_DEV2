@@ -10,20 +10,19 @@ namespace AvaloniaApplication1.Models
     {
         private string _pathRootFolder = "C:\\1\\2";
         //private string _pathRootFolder = "/home/orpo/Desktop/1/2";
-        public static FileTree _fileTree;
-        public static Watcher _watcher;
+        public static FileTree? _fileTree;
+        public static Watcher? _watcher;
 
         public FileTree FileTree
         {
-            get => _fileTree;
+            get => _fileTree!;
             set => this.RaiseAndSetIfChanged(ref _fileTree, value);
         }
 
         public MainModel()
         {
             _fileTree = new FileTree(_pathRootFolder, true);
-            _watcher = new Watcher(_pathRootFolder, FileTree, this);
-
+            _watcher = new Watcher(_pathRootFolder, this);
             Task.Run(() =>
             {
                 CheckChangeRootPath();
@@ -47,7 +46,7 @@ namespace AvaloniaApplication1.Models
         {
             if (_fileTree != null && _fileTree.Parent != null)
             {
-                FileTree = FileTree.Parent;
+                FileTree = FileTree.Parent!;
             }
         }
         /// <summary>
@@ -60,11 +59,11 @@ namespace AvaloniaApplication1.Models
             if (FileTree.Path == searchedFilePath)
                 return FileTree;
             else if (searchedFilePath.StartsWith(FileTree.Path))
-                return SearchChildren(searchedFilePath, FileTree);
+                return SearchChildren(searchedFilePath, FileTree)!;
             else if (FileTree.Path.StartsWith(searchedFilePath))
                 return SearchTreeParent(searchedFilePath, FileTree);
             else
-                return SearchChildren(searchedFilePath, SearchTreeParent(searchedFilePath, FileTree));
+                return SearchChildren(searchedFilePath, SearchTreeParent(searchedFilePath, FileTree))!;
         }
         /// <summary>
         /// Поиск родительского элемента в дереве
@@ -76,7 +75,7 @@ namespace AvaloniaApplication1.Models
         {
             return searchedFilePath.StartsWith(openedFolder.Path)
                 ? openedFolder
-                : SearchTreeParent(searchedFilePath, openedFolder.Parent);
+                : SearchTreeParent(searchedFilePath, openedFolder.Parent!);
         }
         /// <summary>
         /// Поиск дочернего элементав дереве
@@ -84,19 +83,19 @@ namespace AvaloniaApplication1.Models
         /// <param name="searchedFilePath"></param>
         /// <param name="rootFolder"></param>
         /// <returns>Элемент типа FileTree (Файл)</returns>
-        public FileTree SearchChildren(string searchedFilePath, FileTree rootFolder)
+        public FileTree? SearchChildren(string searchedFilePath, FileTree rootFolder)
         {
-            var maxMatchFile1 = rootFolder.Children.ToList().Where(x => searchedFilePath.StartsWith(x.Path))
-                .OrderByDescending(x => x.Path.Length).FirstOrDefault();
+            var maxMatchFile = rootFolder.Children.Where(x=> searchedFilePath.StartsWith(x.Path))
+                                                  .FirstOrDefault()!;
             try
             {
-                return maxMatchFile1.Path == searchedFilePath
-                    ? maxMatchFile1
-                    : SearchChildren(searchedFilePath, maxMatchFile1);
+                return maxMatchFile.Path == searchedFilePath
+                    ? maxMatchFile
+                    : SearchChildren(searchedFilePath, maxMatchFile);
             }
             catch (Exception ex)
             {
-                Program.logger.Error(ex);
+                Program.logger.Error($"Не удалось найти файл в дереве {ex.Message}");
                 return null;
             }
         }
@@ -123,11 +122,7 @@ namespace AvaloniaApplication1.Models
             try
             {
                 FileTree.Path = "Исходный путь отсутствует!";
-                foreach (var child in FileTree.Children.ToList())
-                {
-                    FileTree.Children.Remove(child);
-                }
-
+                FileTree.Children.Clear();
                 FileTree.Parent = null;
             }
             catch (Exception ex)
@@ -144,7 +139,6 @@ namespace AvaloniaApplication1.Models
             {
                 if (!Directory.Exists(_pathRootFolder))
                     ClearOpenFolderForm();
-
             }
         }
     }

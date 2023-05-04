@@ -5,7 +5,12 @@ using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using AvaloniaApplication1.Helper;
 using AvaloniaApplication1.Models;
+using AvaloniaApplication1.Views;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+using ReactiveUI;
 using System;
+using System.Collections.ObjectModel;
+using System.Diagnostics.Metrics;
 using System.IO;
 
 namespace AvaloniaApplication1.ViewModels
@@ -13,9 +18,9 @@ namespace AvaloniaApplication1.ViewModels
     public class MainWindowViewModel : ViewModelBase
     {
         private static IconConverter? s_iconConverter;
-
         private static MainModel _mainModel = new MainModel();
-        public static MainModel MainModel { get { return _mainModel; } }
+ 
+        public static MainModel MainModel { get => _mainModel; }
 
         #region PROPERTIES
         public string Extensions { get => ".exe/ .jpeg/ .png"; }
@@ -40,13 +45,22 @@ namespace AvaloniaApplication1.ViewModels
             }
         }
         #endregion
-
+        public FileTree Test(FileTree awdwa)
+        {
+            MainModel.FileTree = awdwa;
+            return MainModel.FileTree;
+        }
         #region COMMANDS
         public void GoToFolderCommand(FileTree selectedFile)
         {
             if (selectedFile != null && Directory.Exists(selectedFile.Path))
             {
                 MainModel.GoToFolder(selectedFile);
+                if (MainWindow.listBoxExplorer.ItemCount > 0)
+                {
+                    MainWindow.listBoxExplorer.SelectedIndex = 0;
+                    MainWindow.listBoxExplorer.ItemContainerGenerator.ContainerFromIndex(0).Focus();
+                }
             }
         }
         public void GoBackFolderCommand()
@@ -54,6 +68,11 @@ namespace AvaloniaApplication1.ViewModels
             if (MainModel.FileTree != null && MainModel.FileTree.Parent != null)
             {
                 MainModel.GoBackFolder();
+                if (MainWindow.listBoxExplorer.ItemCount > 0)
+                {
+                    MainWindow.listBoxExplorer.SelectedIndex = 0;
+                    MainWindow.listBoxExplorer.ItemContainerGenerator.ContainerFromIndex(0).Focus();
+                }
             }
         }
         public void CancelCommand(Window window)
@@ -62,6 +81,7 @@ namespace AvaloniaApplication1.ViewModels
         }
         public void OkCommand(Window window)
         {
+
         }
         #endregion
     }
