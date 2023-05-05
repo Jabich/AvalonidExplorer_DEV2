@@ -17,11 +17,29 @@ namespace AvaloniaApplication1.ViewModels
 {
     public class MainWindowViewModel : ViewModelBase
     {
+        private int _listBoxItem = 1;
+        public int ListBoxItem
+        {
+            get => _listBoxItem;
+            set => this.RaiseAndSetIfChanged(ref _listBoxItem, value);
+        }
+
+
+
+
+
+
         private static IconConverter? s_iconConverter;
         private static MainModel _mainModel = new MainModel();
+        private static FileTree _fileTree;
  
         public static MainModel MainModel { get => _mainModel; }
 
+        public FileTree FileTree 
+        { 
+            get => MainModel.FileTree; 
+            set => this.RaiseAndSetIfChanged(ref _fileTree,value);
+        }
         #region PROPERTIES
         public string Extensions { get => ".exe/ .jpeg/ .png"; }
 
