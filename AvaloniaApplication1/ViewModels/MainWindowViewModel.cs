@@ -12,11 +12,15 @@ using System;
 using System.Collections.ObjectModel;
 using System.Diagnostics.Metrics;
 using System.IO;
+using System.Reactive.Linq;
 
 namespace AvaloniaApplication1.ViewModels
 {
     public class MainWindowViewModel : ViewModelBase
     {
+        private static string _pathRootFolder = "C:\\1\\2";
+        private static FileTree _fileTree = new FileTree(_pathRootFolder, true);
+        private static IconConverter? s_iconConverter;
         private int _listBoxItem = 1;
         public int ListBoxItem
         {
@@ -27,17 +31,14 @@ namespace AvaloniaApplication1.ViewModels
 
 
 
-
-
-        private static IconConverter? s_iconConverter;
-        private static MainModel _mainModel = new MainModel();
-        private static FileTree _fileTree;
- 
-        public static MainModel MainModel { get => _mainModel; }
-
+        private MainModel _mainLogicModel;
+        public MainWindowViewModel()
+        {
+            _mainLogicModel = new MainModel(FileTree);
+        }
         public FileTree FileTree 
         { 
-            get => MainModel.FileTree; 
+            get => _fileTree; 
             set => this.RaiseAndSetIfChanged(ref _fileTree,value);
         }
         #region PROPERTIES
@@ -63,34 +64,32 @@ namespace AvaloniaApplication1.ViewModels
             }
         }
         #endregion
-        public FileTree Test(FileTree awdwa)
-        {
-            MainModel.FileTree = awdwa;
-            return MainModel.FileTree;
-        }
+
         #region COMMANDS
         public void GoToFolderCommand(FileTree selectedFile)
         {
             if (selectedFile != null && Directory.Exists(selectedFile.Path))
             {
-                MainModel.GoToFolder(selectedFile);
-                if (MainWindow.listBoxExplorer.ItemCount > 0)
-                {
-                    MainWindow.listBoxExplorer.SelectedIndex = 0;
-                    MainWindow.listBoxExplorer.ItemContainerGenerator.ContainerFromIndex(0).Focus();
-                }
+                FileTree = selectedFile;
+                //_mainLogicModel.GoToFolder(selectedFile);
+                //if (MainWindow.listBoxExplorer.ItemCount > 0)
+                //{
+                //    MainWindow.listBoxExplorer.SelectedIndex = 0;
+                //    MainWindow.listBoxExplorer.ItemContainerGenerator.ContainerFromIndex(0).Focus();
+                //}
             }
         }
         public void GoBackFolderCommand()
         {
-            if (MainModel.FileTree != null && MainModel.FileTree.Parent != null)
+            if (FileTree.Parent != null)
             {
-                MainModel.GoBackFolder();
-                if (MainWindow.listBoxExplorer.ItemCount > 0)
-                {
-                    MainWindow.listBoxExplorer.SelectedIndex = 0;
-                    MainWindow.listBoxExplorer.ItemContainerGenerator.ContainerFromIndex(0).Focus();
-                }
+                FileTree = FileTree.Parent; 
+                //_mainLogicModel.GoBackFolder();
+                //if (MainWindow.listBoxExplorer.ItemCount > 0)
+                //{
+                //    MainWindow.listBoxExplorer.SelectedIndex = 0;
+                //    MainWindow.listBoxExplorer.ItemContainerGenerator.ContainerFromIndex(0).Focus();
+                //}
             }
         }
         public void CancelCommand(Window window)

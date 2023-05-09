@@ -1,5 +1,6 @@
 ﻿using ReactiveUI;
 using System;
+using System.Configuration;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -17,11 +18,12 @@ namespace AvaloniaApplication1.Models
         {
             get => _fileTree!;
             set => this.RaiseAndSetIfChanged(ref _fileTree, value);
+
         }
 
-        public MainModel()
+        public MainModel(FileTree fileTree)
         {
-            _fileTree = new FileTree(_pathRootFolder, true);
+            _fileTree = fileTree;
             _watcher = new Watcher(_pathRootFolder, this);
             Task.Run(() =>
             {
@@ -36,7 +38,8 @@ namespace AvaloniaApplication1.Models
         {
             if (selectedFile != null && Directory.Exists(selectedFile.Path))
             {
-                FileTree = selectedFile;
+                FileTree = new FileTree("C:\\Program Files", true);
+                //FileTree = selectedFile;
             }
         }
         /// <summary>
@@ -76,7 +79,7 @@ namespace AvaloniaApplication1.Models
             return searchedFilePath.StartsWith(openedFolder.Path)
                 ? openedFolder
                 : SearchTreeParent(searchedFilePath, openedFolder.Parent!);
-        }
+        }   
         /// <summary>
         /// Поиск дочернего элементав дереве
         /// </summary>
