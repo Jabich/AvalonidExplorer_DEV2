@@ -41,7 +41,7 @@
 					 Text="{Binding FileTree.File.Path}" IsReadOnly="True"/>
 		</StackPanel>
 		<ListBox x:Name="FilesListBox" Grid.Row="1" BorderThickness="1" Width="380" Height="330" Margin="0,22,0,0"
-				 Items="{Binding FileTree.File.Children}" HotKeyManager.HotKey="Right" SelectedIndex="{Binding ListBoxItem}">
+				 Items="{Binding FilteredItems}" HotKeyManager.HotKey="Right" SelectedIndex="{Binding ListBoxItem}">
 			<ListBox.KeyBindings>
 				<KeyBinding Gesture="Right" Command="{Binding GoToFolderCommand}"
 							                CommandParameter="{Binding RelativeSource={RelativeSource Self}, Path=SelectedItem}"/>
@@ -78,7 +78,7 @@
 		<StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="10"
 					HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,5,10">
 			<TextBox x:Name="TextBoxExtensions" Width="220"  Watermark="png/exe/jpeg/spa/spu" 
-					 Text="{Binding Extensions}">
+					 Text="{Binding Extensions, Mode=TwoWay}">
 
 			</TextBox>
 			<Button Width="70" Height="30" Content="ОК"

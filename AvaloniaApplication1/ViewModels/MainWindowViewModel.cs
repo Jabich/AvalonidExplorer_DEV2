@@ -9,9 +9,11 @@ using AvaloniaApplication1.Views;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using ReactiveUI;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics.Metrics;
 using System.IO;
+using System.Linq;
 using System.Reactive.Linq;
 
 namespace AvaloniaApplication1.ViewModels
@@ -23,6 +25,7 @@ namespace AvaloniaApplication1.ViewModels
         private static IconConverter? s_iconConverter;
         private int _listBoxItem = 1;
         private string _extensions;
+        private IEnumerable<FileTree> _filtredItems = _fileTree.File.Children!;
         public int ListBoxItem
         {
             get => _listBoxItem;
@@ -32,24 +35,80 @@ namespace AvaloniaApplication1.ViewModels
         public string Extensions
         {
             get => _extensions;
-            set => this.RaiseAndSetIfChanged(ref _extensions, value);
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _extensions, value);
+                if (Extensions != null)
+                {
+                    if (Extensions.Length != 0)
+                    {
+                        var extensions = Extensions.Split('/');
+                        FilteredItems = FileTree.File.Children!.Where(file =>
+                        {
+                            if (Directory.Exists(file.Path))
+                                return true;
+                            string fileExtensions = Path.GetExtension(file.Name).TrimStart('.');
+                            return extensions.Contains(fileExtensions);
+                        });
+                    }
+                    else
+                    {
+                        FilteredItems = FileTree.File.Children;
+                    }
+                }
+                else
+                {
+                    FilteredItems = FileTree.File.Children;
+                    var extensions = Extensions.Split('/');
+                    FilteredItems = FileTree.File.Children!.Where(file =>
+                    {
+                        if (Directory.Exists(file.Path))
+                            return true;
+                        string fileExtensions = Path.GetExtension(file.Name).TrimStart('.');
+                        return extensions.Contains(fileExtensions);
+                    });
+                }
+                
+
+            }
+        }
+
+        public IEnumerable<FileTree> FilteredItems
+        {
+            get
+            {
+                //return FileTree.File.Children.Where(file => file.Name.Contains(".vsdx"));
+                return _filtredItems;
+            }
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _filtredItems, value);
+            }
         }
 
 
         private MainModel _mainLogicModel;
+        public static MainWindowViewModel mainModel;
         public MainWindowViewModel()
         {
+            mainModel = this;
             _mainLogicModel = new MainModel(_fileTree);
+
         }
-        public FileTree FileTree 
-        { 
+        public FileTree FileTree
+        {
             get => _fileTree;
             set
             {
                 this.RaiseAndSetIfChanged(ref _fileTree, value);
                 _mainLogicModel.FileTree = value;
+                FilteredItems = FileTree.File.Children;
+                Extensions = Extensions;
             }
         }
+
+
+
         #region PROPERTIES
 
         public static IMultiValueConverter FileIconConverter

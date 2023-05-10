@@ -1,4 +1,5 @@
 ﻿using Avalonia.Threading;
+using AvaloniaApplication1.ViewModels;
 using ReactiveUI;
 using System;
 using System.IO;
@@ -64,6 +65,7 @@ namespace AvaloniaApplication1.Models
                     addFile.HasChildren = addFile.IsDirectory && addFile.Children.Count != 0 || addFile.Children != null;
                     addFile.Parent!.HasChildren = true;
                     parent.Children.Add(addFile);
+                    MainWindowViewModel.mainModel.Extensions = MainWindowViewModel.mainModel.Extensions;
                 }
                 catch (Exception ex)
                 {

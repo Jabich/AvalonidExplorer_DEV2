@@ -73,7 +73,10 @@ namespace AvaloniaApplication1.Models
         public ObservableCollection<FileTree>? Children
         {
             get => _children ??= LoadChildren();
-            set => this.RaiseAndSetIfChanged(ref _children, value);
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _children, value);
+            }
         }
         #endregion
 
@@ -107,7 +110,7 @@ namespace AvaloniaApplication1.Models
                 result.Add(new FileTree(d, true, this));
             }
 
-            foreach (var f in Directory.EnumerateFiles(Path, "*", options))
+            foreach (var f in Directory.EnumerateFiles(Path, "*.mq4", options))
             {
                 result.Add(new FileTree(f, false, this));
             }

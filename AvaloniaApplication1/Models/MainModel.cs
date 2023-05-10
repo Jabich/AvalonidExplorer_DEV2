@@ -1,5 +1,7 @@
-﻿using ReactiveUI;
+﻿using AvaloniaApplication1.ViewModels;
+using ReactiveUI;
 using System;
+using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
 using System.Linq;
@@ -14,14 +16,18 @@ namespace AvaloniaApplication1.Models
         public static FileTree? _fileTree;
         public static Watcher? _watcher;
 
-        public static void TEST(FileTree fileTree)
+        public static void TEST(IEnumerable<FileTree> fileTree)
         {
-            fileTree.File.Children.RemoveAt(0);
+            fileTree = fileTree;
         }
         public FileTree FileTree
         {
             get => _fileTree!;
-            set => this.RaiseAndSetIfChanged(ref _fileTree, value);
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _fileTree, value);                //MainWindowViewModel.mainModel.FileTree = fileTree;
+                MainWindowViewModel.mainModel.Extensions = MainWindowViewModel.mainModel.Extensions;
+            }
         }
         public MainModel(FileTree fileTree)
         {
