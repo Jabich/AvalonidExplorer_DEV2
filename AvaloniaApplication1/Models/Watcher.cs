@@ -11,16 +11,24 @@ namespace AvaloniaApplication1.Models
         public FileSystemWatcher? _watcher;
         private static string? _rootFolderPath;
         private MainModel _mainModel;
+        private FileTree _fileTree;
         public MainModel MainModel
         {
             get => _mainModel;
             set => this.RaiseAndSetIfChanged(ref _mainModel, value);
         }
-        public Watcher(string rootFolderPath, MainModel mainModel)
+        public Watcher(string rootFolderPath, MainModel mainModel, FileTree fileTree)
         {
+            _fileTree = fileTree;
             _rootFolderPath = rootFolderPath;
             _mainModel = mainModel;
             StartWatch();
+        }
+        public FileTree FileTree
+        {
+            get => _fileTree!;
+            set => this.RaiseAndSetIfChanged(ref _fileTree, value);
+
         }
         private void StartWatch()
         {
@@ -75,10 +83,10 @@ namespace AvaloniaApplication1.Models
                 try
                 {
                     var file = MainModel.SearchFile(e.FullPath);
-                    if(file == null) return;
+                    if (file == null) return;
                     file.Parent!.Children.Remove(file);
-                    if (e.FullPath == MainModel.FileTree.Path)
-                        MainModel.GoBackFolder();
+                    if (e.FullPath == MainModel.FileTree.File.Path)
+                        MainModel.FileTree.File = MainModel.SearchFile(e.FullPath).Parent!;
                 }
                 catch (Exception ex)
                 {

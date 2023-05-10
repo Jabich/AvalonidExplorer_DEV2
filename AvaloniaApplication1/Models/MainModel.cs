@@ -14,43 +14,23 @@ namespace AvaloniaApplication1.Models
         public static FileTree? _fileTree;
         public static Watcher? _watcher;
 
+        public static void TEST(FileTree fileTree)
+        {
+            fileTree.File.Children.RemoveAt(0);
+        }
         public FileTree FileTree
         {
             get => _fileTree!;
             set => this.RaiseAndSetIfChanged(ref _fileTree, value);
-
         }
-
         public MainModel(FileTree fileTree)
         {
             _fileTree = fileTree;
-            _watcher = new Watcher(_pathRootFolder, this);
+            _watcher = new Watcher(_pathRootFolder, this, FileTree);
             Task.Run(() =>
             {
                 CheckChangeRootPath();
             });
-        }
-        /// <summary>
-        /// Переход в выбранную папку
-        /// </summary>
-        /// <param name="selectedFile"></param>
-        public void GoToFolder(FileTree selectedFile)
-        {
-            if (selectedFile != null && Directory.Exists(selectedFile.Path))
-            {
-                FileTree = new FileTree("C:\\Program Files", true);
-                //FileTree = selectedFile;
-            }
-        }
-        /// <summary>
-        /// Возврат в родительскую папку
-        /// </summary>
-        public void GoBackFolder()
-        {
-            if (_fileTree != null && _fileTree.Parent != null)
-            {
-                FileTree = FileTree.Parent!;
-            }
         }
         /// <summary>
         /// Поиск файла в дереве

@@ -10,7 +10,7 @@ namespace AvaloniaApplication1.Views
         public MainWindow()
         {
             InitializeComponent();
-            //Activated += FocusedListBoxItem!;
+            Activated += FocusedListBoxItem!;
         }
         private void InitializeComponent()
         {

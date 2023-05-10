@@ -20,9 +20,15 @@ namespace AvaloniaApplication1.Models
         private bool _hasChildren = true;
         private bool _isExpanded;
         private bool _isChecked;
+        private FileTree _fileTree;
         #endregion
 
         #region PROPERTIES
+        public FileTree File
+        {
+            get => _fileTree;
+            set => this.RaiseAndSetIfChanged(ref _fileTree, value);
+        }
         public bool IsChecked
         {
             get => _isChecked;
@@ -62,7 +68,7 @@ namespace AvaloniaApplication1.Models
             set => this.RaiseAndSetIfChanged(ref _isExpanded, value);
         }
 
-        public bool IsDirectory { get; }
+        public bool IsDirectory { get; set; }
         public FileTree? Parent { get; set; }
         public ObservableCollection<FileTree>? Children
         {
@@ -73,13 +79,14 @@ namespace AvaloniaApplication1.Models
 
         public FileTree(string path, bool isDirectory, FileTree? parent = null, bool isRoot = false)
         {
-            _path = path;
-            _name = isRoot ? path : System.IO.Path.GetFileName(Path);
-            _isExpanded = isRoot;
-            IsDirectory = isDirectory;
-            HasChildren = isDirectory;
-            _isChecked = false;
-            Parent = parent;
+           _fileTree = this;
+           _path = path;
+           _name = isRoot ? path : System.IO.Path.GetFileName(Path);
+           _isExpanded = isRoot;
+           IsDirectory = isDirectory;
+           HasChildren = isDirectory;
+           _isChecked = false;
+           Parent = parent;
         }
 
         private ObservableCollection<FileTree>? LoadChildren()

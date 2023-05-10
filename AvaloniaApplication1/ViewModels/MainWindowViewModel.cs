@@ -22,27 +22,35 @@ namespace AvaloniaApplication1.ViewModels
         private static FileTree _fileTree = new FileTree(_pathRootFolder, true);
         private static IconConverter? s_iconConverter;
         private int _listBoxItem = 1;
+        private string _extensions;
         public int ListBoxItem
         {
             get => _listBoxItem;
             set => this.RaiseAndSetIfChanged(ref _listBoxItem, value);
         }
 
-
+        public string Extensions
+        {
+            get => _extensions;
+            set => this.RaiseAndSetIfChanged(ref _extensions, value);
+        }
 
 
         private MainModel _mainLogicModel;
         public MainWindowViewModel()
         {
-            _mainLogicModel = new MainModel(FileTree);
+            _mainLogicModel = new MainModel(_fileTree);
         }
         public FileTree FileTree 
         { 
-            get => _fileTree; 
-            set => this.RaiseAndSetIfChanged(ref _fileTree,value);
+            get => _fileTree;
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _fileTree, value);
+                _mainLogicModel.FileTree = value;
+            }
         }
         #region PROPERTIES
-        public string Extensions { get => ".exe/ .jpeg/ .png"; }
 
         public static IMultiValueConverter FileIconConverter
         {
@@ -71,25 +79,15 @@ namespace AvaloniaApplication1.ViewModels
             if (selectedFile != null && Directory.Exists(selectedFile.Path))
             {
                 FileTree = selectedFile;
-                //_mainLogicModel.GoToFolder(selectedFile);
-                //if (MainWindow.listBoxExplorer.ItemCount > 0)
-                //{
-                //    MainWindow.listBoxExplorer.SelectedIndex = 0;
-                //    MainWindow.listBoxExplorer.ItemContainerGenerator.ContainerFromIndex(0).Focus();
-                //}
+                WindowAssistant.FocusedListBox(MainWindow.listBoxExplorer);
             }
         }
         public void GoBackFolderCommand()
         {
             if (FileTree.Parent != null)
             {
-                FileTree = FileTree.Parent; 
-                //_mainLogicModel.GoBackFolder();
-                //if (MainWindow.listBoxExplorer.ItemCount > 0)
-                //{
-                //    MainWindow.listBoxExplorer.SelectedIndex = 0;
-                //    MainWindow.listBoxExplorer.ItemContainerGenerator.ContainerFromIndex(0).Focus();
-                //}
+                FileTree = FileTree.Parent;
+                WindowAssistant.FocusedListBox(MainWindow.listBoxExplorer);
             }
         }
         public void CancelCommand(Window window)
