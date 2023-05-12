@@ -1,5 +1,6 @@
 ﻿using ReactiveUI;
 using System;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -15,12 +16,23 @@ namespace AvaloniaApplication1.Models
 
         public FileTree FileTree
         {
-            get => _fileTree!;
-            set => this.RaiseAndSetIfChanged(ref _fileTree, value);
+            get => _fileTree;
+            set
+            {
+                _fileTree = value;
+                OnPropertyChanged(nameof(FileTree));
+            }
+        }
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        protected virtual void OnPropertyChanged(string propertyName)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
         public MainModel()
         {
+
             _fileTree = new FileTree(_pathRootFolder, true);
             _watcher = new Watcher(_pathRootFolder, this);
             Task.Run(() =>

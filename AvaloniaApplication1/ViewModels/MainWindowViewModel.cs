@@ -24,22 +24,18 @@ namespace AvaloniaApplication1.ViewModels
             set => this.RaiseAndSetIfChanged(ref _listBoxItem, value);
         }
 
-
-
-
+        private FileTree _selectedFile;
+        public FileTree SelectedFile
+        {
+            get => _selectedFile;
+            set => this.RaiseAndSetIfChanged(ref _selectedFile, value);
+        }
 
 
         private static IconConverter? s_iconConverter;
         private static MainModel _mainModel = new MainModel();
         private static FileTree _fileTree;
- 
-        public static MainModel MainModel { get => _mainModel; }
 
-        public FileTree FileTree 
-        { 
-            get => MainModel.FileTree; 
-            set => this.RaiseAndSetIfChanged(ref _fileTree,value);
-        }
         #region PROPERTIES
         public string Extensions { get => ".exe/ .jpeg/ .png"; }
 
@@ -62,35 +58,54 @@ namespace AvaloniaApplication1.ViewModels
                 return s_iconConverter;
             }
         }
-        #endregion
-        public FileTree Test(FileTree awdwa)
+        //public static IValueConverter IdexToItemConverter
+        //{
+        //    get
+        //    {
+
+        //    }
+        //}
+
+        public FileTree FileTree
         {
-            MainModel.FileTree = awdwa;
-            return MainModel.FileTree;
+            get => _mainModel.FileTree;
+            set => this.RaiseAndSetIfChanged(ref _fileTree, value);
+        }
+        #endregion
+
+        public MainWindowViewModel()
+        {
+            _fileTree = _mainModel.FileTree;
+            _mainModel.PropertyChanged += OnMyPropertyChanged!;
+            _selectedFile = _fileTree.Children[1];
+        }
+        private void OnMyPropertyChanged(object sender, EventArgs e)
+        {
+            FileTree = _mainModel.FileTree!;
         }
         #region COMMANDS
-        public void GoToFolderCommand(FileTree selectedFile)
+        public void GoToFolderCommand(object awd)
         {
-            if (selectedFile != null && Directory.Exists(selectedFile.Path))
-            {
-                MainModel.GoToFolder(selectedFile);
-                if (MainWindow.listBoxExplorer.ItemCount > 0)
-                {
-                    MainWindow.listBoxExplorer.SelectedIndex = 0;
-                    MainWindow.listBoxExplorer.ItemContainerGenerator.ContainerFromIndex(0).Focus();
-                }
-            }
+            //if (selectedFile != null && Directory.Exists(selectedFile.Path))
+            //{
+            //    _mainModel.GoToFolder(selectedFile);
+            //    //if (MainWindow.listBoxExplorer.ItemCount > 0)
+            //    //{
+            //    //    MainWindow.listBoxExplorer.SelectedIndex = 0;
+            //    //    MainWindow.listBoxExplorer.ItemContainerGenerator.ContainerFromIndex(0).Focus();
+            //    //}
+            //}
         }
         public void GoBackFolderCommand()
         {
-            if (MainModel.FileTree != null && MainModel.FileTree.Parent != null)
+            if (_mainModel.FileTree.Parent != null)
             {
-                MainModel.GoBackFolder();
-                if (MainWindow.listBoxExplorer.ItemCount > 0)
-                {
-                    MainWindow.listBoxExplorer.SelectedIndex = 0;
-                    MainWindow.listBoxExplorer.ItemContainerGenerator.ContainerFromIndex(0).Focus();
-                }
+                _mainModel.GoBackFolder();
+                //if (MainWindow.listBoxExplorer.ItemCount > 0)
+                //{
+                //    MainWindow.listBoxExplorer.SelectedIndex = 0;
+                //    MainWindow.listBoxExplorer.ItemContainerGenerator.ContainerFromIndex(0).Focus();
+                //}
             }
         }
         public void CancelCommand(Window window)
