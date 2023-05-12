@@ -1,27 +1,39 @@
-﻿using ReactiveUI;
+﻿using AvaloniaApplication1.ViewModels;
+using ReactiveUI;
 using System;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
 namespace AvaloniaApplication1.Models
 {
-    public class MainModel : ReactiveObject
+    public class MainModel : ReactiveObject, INotifyPropertyChanged
     {
         private string _pathRootFolder = "C:\\1\\2";
         //private string _pathRootFolder = "/home/orpo/Desktop/1/2";
-        public static FileTree? _fileTree;
+        public FileTree? _fileTree;
         public static Watcher? _watcher;
 
         public FileTree FileTree
         {
-            get => _fileTree!;
-            set => this.RaiseAndSetIfChanged(ref _fileTree, value);
+            get => _fileTree;
+            set
+            {
+                _fileTree = value;
+                OnPropertyChanged(nameof(FileTree));
+            }
         }
+        public event PropertyChangedEventHandler PropertyChanged;
 
-        public MainModel()
+        protected virtual void OnPropertyChanged(string propertyName)
         {
-            _fileTree = new FileTree(_pathRootFolder, true);
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+        public MainModel()  
+        {
+            FileTree = new FileTree(_pathRootFolder, true);
             _watcher = new Watcher(_pathRootFolder, this);
             Task.Run(() =>
             {
@@ -44,7 +56,7 @@ namespace AvaloniaApplication1.Models
         /// </summary>
         public void GoBackFolder()
         {
-            if (_fileTree != null && _fileTree.Parent != null)
+            if (FileTree != null && FileTree.Parent != null)
             {
                 FileTree = FileTree.Parent!;
             }
@@ -85,7 +97,7 @@ namespace AvaloniaApplication1.Models
         /// <returns>Элемент типа FileTree (Файл)</returns>
         public FileTree? SearchChildren(string searchedFilePath, FileTree rootFolder)
         {
-            var maxMatchFile = rootFolder.Children.Where(x=> searchedFilePath.StartsWith(x.Path))
+            var maxMatchFile = rootFolder.Children.Where(x => searchedFilePath.StartsWith(x.Path))
                                                   .FirstOrDefault()!;
             try
             {
@@ -140,6 +152,11 @@ namespace AvaloniaApplication1.Models
                 if (!Directory.Exists(_pathRootFolder))
                     ClearOpenFolderForm();
             }
+        }
+        public void TEST(FileTree fileTree)
+        {
+            //fileTree.Children.Clear();
+            fileTree = new FileTree("C:\\Users\\ORPO\\Desktop\\Kexi-master", true);
         }
     }
 }

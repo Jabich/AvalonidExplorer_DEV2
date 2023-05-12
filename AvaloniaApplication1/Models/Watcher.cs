@@ -77,7 +77,7 @@ namespace AvaloniaApplication1.Models
                     var file = MainModel.SearchFile(e.FullPath);
                     if(file == null) return;
                     file.Parent!.Children.Remove(file);
-                    if (e.FullPath == MainModel.FileTree.Path)
+                    if (e.FullPath == MainModel._fileTree.Path)
                         MainModel.GoBackFolder();
                 }
                 catch (Exception ex)

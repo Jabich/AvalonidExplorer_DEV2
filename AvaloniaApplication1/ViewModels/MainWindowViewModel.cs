@@ -7,21 +7,30 @@ using AvaloniaApplication1.Helper;
 using AvaloniaApplication1.Models;
 using AvaloniaApplication1.Views;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Prism.Events;
 using ReactiveUI;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Diagnostics.Metrics;
 using System.IO;
+using System.Runtime.CompilerServices;
 
 namespace AvaloniaApplication1.ViewModels
 {
-    public class MainWindowViewModel : ViewModelBase
+    public class MainWindowViewModel : ViewModelBase, INotifyPropertyChanged
     {
+        private readonly IEventAggregator _eventAggregator;
         private static IconConverter? s_iconConverter;
-        private static MainModel _mainModel = new MainModel();
- 
-        public static MainModel MainModel { get => _mainModel; }
-
+        private static MainModel _mainModel;
+        private static FileTree _fileTree;
+        public MainModel MainModel { get { return _mainModel; } }
+        public FileTree FileTree
+        {
+            get => _fileTree;
+            set => this.RaiseAndSetIfChanged(ref _fileTree, value);
+        }
         #region PROPERTIES
         public string Extensions { get => ".exe/ .jpeg/ .png"; }
 
@@ -45,34 +54,57 @@ namespace AvaloniaApplication1.ViewModels
             }
         }
         #endregion
-        public FileTree Test(FileTree awdwa)
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        protected virtual void OnPropertyChanged(string propertyName)
         {
-            MainModel.FileTree = awdwa;
-            return MainModel.FileTree;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        public MainWindowViewModel(/*IEventAggregator eventAggregator*/)
+        {
+            //_eventAggregator = eventAggregator;
+            _mainModel = new MainModel();
+            //_fileTree = new FileTree("C:\\1\\2", true);
+            _fileTree = new FileTree("C:\\Users\\ORPO\\Desktop\\Kexi-master", true);
+            _mainModel.PropertyChanged += OnMyPropertyChanged;
+        }
+
+        private void OnMyPropertyChanged(object sender, EventArgs e)
+        {
+            FileTree = _mainModel.FileTree;
         }
         #region COMMANDS
         public void GoToFolderCommand(FileTree selectedFile)
         {
-            if (selectedFile != null && Directory.Exists(selectedFile.Path))
-            {
-                MainModel.GoToFolder(selectedFile);
-                if (MainWindow.listBoxExplorer.ItemCount > 0)
-                {
-                    MainWindow.listBoxExplorer.SelectedIndex = 0;
-                    MainWindow.listBoxExplorer.ItemContainerGenerator.ContainerFromIndex(0).Focus();
-                }
-            }
+            //FileTree = new FileTree("C:\\Users\\ORPO\\Desktop\\Kexi-master", true);
+            FileTree = new FileTree("C:\\1\\2", true);
+            //FileTree = selectedFile;
+
+
+
+            //if (selectedFile != null && Directory.Exists(selectedFile.Path))
+            //{
+            //    _mainModel.GoToFolder(selectedFile);
+            //    //if (MainWindow.listBoxExplorer.ItemCount > 0)
+            //    //{
+            //    //    MainWindow.listBoxExplorer.SelectedIndex = 0;
+            //    //    MainWindow.listBoxExplorer.ItemContainerGenerator.ContainerFromIndex(0).Focus();
+            //    //}
+            //}
         }
         public void GoBackFolderCommand()
         {
-            if (MainModel.FileTree != null && MainModel.FileTree.Parent != null)
+            if (FileTree != null && FileTree.Parent != null)
             {
-                MainModel.GoBackFolder();
-                if (MainWindow.listBoxExplorer.ItemCount > 0)
-                {
-                    MainWindow.listBoxExplorer.SelectedIndex = 0;
-                    MainWindow.listBoxExplorer.ItemContainerGenerator.ContainerFromIndex(0).Focus();
-                }
+                //FileTree = FileTree.Parent;
+                _mainModel.GoBackFolder();
+                //if (MainWindow.listBoxExplorer.ItemCount > 0)
+                //{
+                //    MainWindow.listBoxExplorer.SelectedIndex = 0;
+                //    MainWindow.listBoxExplorer.ItemContainerGenerator.ContainerFromIndex(0).Focus();
+                //}
             }
         }
         public void CancelCommand(Window window)
@@ -83,6 +115,16 @@ namespace AvaloniaApplication1.ViewModels
         {
 
         }
+        public void TEST(FileTree fileTree)
+        {
+            //fileTree.Children.Clear();
+            fileTree = new FileTree("C:\\Users\\ORPO\\Desktop\\Kexi-master", true);
+        }
         #endregion
+
+        private void UpdateFileTree()
+        {
+
+        }
     }
 }
