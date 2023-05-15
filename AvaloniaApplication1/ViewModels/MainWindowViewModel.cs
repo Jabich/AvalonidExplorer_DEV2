@@ -67,17 +67,14 @@ namespace AvaloniaApplication1.ViewModels
         #region COMMANDS
         public void GoToFolderCommand()
         {
-            if (FileTree.Children?[ItemIndex] != null && Directory.Exists(FileTree.Children[ItemIndex].Path))
-            {
+            if (ItemIndex >= 0 && Directory.Exists(FileTree.Children?[ItemIndex].Path) && 
+                FileTree.Children.Count != 0)
                 _mainModel.GoToFolder(FileTree.Children[ItemIndex]);
-            }
         }
         public void GoBackFolderCommand()
         {
             if (_mainModel.FileTree.Parent != null)
-            {
                 _mainModel.GoBackFolder();
-            }
         }
         public void CancelCommand(Window window)
         {
@@ -89,9 +86,9 @@ namespace AvaloniaApplication1.ViewModels
         }
         public void UpCommand()
         {
-            if (ItemIndex>0)
+            if (ItemIndex > 0)
                 ItemIndex--;
-            else if (ItemIndex == 0)
+            else if (ItemIndex <= 0)
                 ItemIndex = FileTree.Children!.Count - 1;
         }
         public void DownCommand()
