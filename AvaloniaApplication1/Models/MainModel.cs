@@ -9,37 +9,39 @@ namespace AvaloniaApplication1.Models
 {
     public class MainModel : ReactiveObject
     {
+        #region FIELDS
         private string _pathRootFolder = "C:\\1\\2";
         //private string _pathRootFolder = "/home/orpo/Desktop/1/2";
         public static FileTree? _fileTree;
         public static Watcher? _watcher;
+        new public event PropertyChangedEventHandler? PropertyChanged;
+        #endregion 
 
         public FileTree FileTree
         {
-            get => _fileTree;
+            get => _fileTree!;
             set
             {
                 _fileTree = value;
                 OnPropertyChanged(nameof(FileTree));
             }
         }
-        public event PropertyChangedEventHandler PropertyChanged;
+        public MainModel()
+        {
+            if (Directory.Exists(_pathRootFolder))
+            {
+                _fileTree = new FileTree(_pathRootFolder, true);
+                _watcher = new Watcher(_pathRootFolder, this);
+                CheckChangeRootPath();
+            }
+        }
 
+        #region METHODS
         protected virtual void OnPropertyChanged(string propertyName)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
-        public MainModel()
-        {
-
-            _fileTree = new FileTree(_pathRootFolder, true);
-            _watcher = new Watcher(_pathRootFolder, this);
-            Task.Run(() =>
-            {
-                CheckChangeRootPath();
-            });
-        }
         /// <summary>
         /// Переход в выбранную папку
         /// </summary>
@@ -97,7 +99,7 @@ namespace AvaloniaApplication1.Models
         /// <returns>Элемент типа FileTree (Файл)</returns>
         public FileTree? SearchChildren(string searchedFilePath, FileTree rootFolder)
         {
-            var maxMatchFile = rootFolder.Children.Where(x=> searchedFilePath.StartsWith(x.Path))
+            var maxMatchFile = rootFolder.Children!.Where(x => searchedFilePath.StartsWith(x.Path))
                                                   .FirstOrDefault()!;
             try
             {
@@ -117,7 +119,7 @@ namespace AvaloniaApplication1.Models
         /// <param name="changedFile"></param>
         public void ChangePathChildren(FileTree changedFile)
         {
-            foreach (var child in changedFile.Children.ToList())
+            foreach (var child in changedFile.Children!.ToList())
             {
                 child.Path = Path.Combine(changedFile.Path, child.Name);
                 if (Directory.Exists(child.Path))
@@ -129,12 +131,12 @@ namespace AvaloniaApplication1.Models
         /// <summary>
         /// Очистка формы 
         /// </summary>
-        public void ClearOpenFolderForm()
+        public void CheckExistRootPath()
         {
             try
             {
                 FileTree.Path = "Исходный путь отсутствует!";
-                FileTree.Children.Clear();
+                FileTree.Children!.Clear();
                 FileTree.Parent = null;
             }
             catch (Exception ex)
@@ -147,11 +149,18 @@ namespace AvaloniaApplication1.Models
         /// </summary>
         private void CheckChangeRootPath()
         {
-            while (true)
+            Task.Run(() =>
             {
-                if (!Directory.Exists(_pathRootFolder))
-                    ClearOpenFolderForm();
-            }
+                while (true)
+                {
+                    if (!Directory.Exists(_pathRootFolder))
+                    {
+                        CheckExistRootPath();
+                        return;
+                    }
+                }
+            });
         }
+        #endregion
     }
 }

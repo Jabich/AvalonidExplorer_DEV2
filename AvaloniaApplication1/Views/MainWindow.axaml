@@ -22,9 +22,9 @@
 		<KeyBinding Gesture="Left" Command="{Binding GoBackFolderCommand}" />
 		<KeyBinding Gesture="Escape" Command="{Binding CancelCommand}"
 					CommandParameter="{Binding ElementName=SelectFilesForm}"/>
-		<KeyBinding Gesture="Right" Command="{Binding GoToFolderCommand}"
-					CommandParameter="{Binding RelativeSource={RelativeSource Self}, Path= SelectedItem}" />
-
+		<KeyBinding Gesture="Right" Command="{Binding GoToFolderCommand}"/>
+		<KeyBinding Gesture="Up" Command="{Binding UpCommand}"/>
+		<KeyBinding Gesture="Down" Command="{Binding DownCommand}"/>
 	</Window.KeyBindings>
 
 	<Grid RowDefinitions="40,*,30">
@@ -41,16 +41,14 @@
 					 Text="{Binding FileTree.Path}" IsReadOnly="True"/>
 		</StackPanel>
 		<ListBox x:Name="FilesListBox" Grid.Row="1" BorderThickness="1" Width="380" Height="330" Margin="0,22,0,0"
-				 Items="{Binding FileTree.Children}" HotKeyManager.HotKey="Right" SelectedIndex="{Binding ListBoxItem}" 
-				                                     SelectedItem="{Binding SelectedFile}">
+				 Items="{Binding FileTree.Children}" HotKeyManager.HotKey="Right" SelectedIndex="{Binding ItemIndex}" 
+				                                   >
 			<ListBox.KeyBindings>
-				<KeyBinding Gesture="Right" Command="{Binding GoToFolderCommand}"
-							                CommandParameter="{Binding SelectedItem}"/>
+				<KeyBinding Gesture="Right" Command="{Binding GoToFolderCommand}"/>
 			</ListBox.KeyBindings>
 			<i:Interaction.Behaviors>
 				<ia:EventTriggerBehavior EventName="DoubleTapped">
-					<ia:InvokeCommandAction Command="{Binding GoToFolderCommand}"
-											CommandParameter="{Binding RelativeSource={RelativeSource Self}, Path=SelectedItem}"/>
+					<ia:InvokeCommandAction Command="{Binding GoToFolderCommand}"/>
 				</ia:EventTriggerBehavior>
 			</i:Interaction.Behaviors>
 			<ListBox.ItemTemplate>
@@ -78,7 +76,8 @@
 
 		<StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="10"
 					HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,5,10">
-			<TextBox x:Name="TextBoxExtensions" Width="220" Watermark="png/exe/jpeg/spa/spu" Text="qweqweqwe">
+			<TextBox x:Name="TextBoxExtensions" Width="220" Watermark="png/exe/jpeg/spa/spu" 
+					 Text="{Binding Extensions}" IsReadOnly="True">
 
 			</TextBox>
 			<Button Width="70" Height="30" Content="ОК"

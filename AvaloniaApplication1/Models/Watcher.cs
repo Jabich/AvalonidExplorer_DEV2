@@ -50,12 +50,12 @@ namespace AvaloniaApplication1.Models
                 try
                 {
                     var parent = MainModel.SearchFile(Path.GetDirectoryName(e.FullPath)!);
-                    if (parent.Children.Where(x => x.Path == e.FullPath).FirstOrDefault() != null) return;
+                    if (parent.Children?.Where(x => x.Path == e.FullPath).FirstOrDefault() != null) return;
                     var addFile = new FileTree(e.FullPath, Directory.Exists(e.FullPath), parent);
                     addFile.IsChecked = addFile.Parent != null && addFile.Parent.IsChecked != false;
-                    addFile.HasChildren = addFile.IsDirectory && addFile.Children.Count != 0 || addFile.Children != null;
+                    addFile.HasChildren = addFile.IsDirectory && addFile.Children?.Count != 0 || addFile.Children != null;
                     addFile.Parent!.HasChildren = true;
-                    parent.Children.Add(addFile);
+                    parent.Children!.Add(addFile);
                 }
                 catch (Exception ex)
                 {
@@ -76,7 +76,7 @@ namespace AvaloniaApplication1.Models
                 {
                     var file = MainModel.SearchFile(e.FullPath);
                     if(file == null) return;
-                    file.Parent!.Children.Remove(file);
+                    file.Parent!.Children?.Remove(file);
                     if (e.FullPath == MainModel.FileTree.Path)
                         MainModel.GoBackFolder();
                 }
@@ -98,8 +98,8 @@ namespace AvaloniaApplication1.Models
                 try
                 {
                     var changedFile = MainModel.SearchFile(e.OldFullPath);
-                    var duplicat = changedFile.Parent!.Children.Where(x => x.Path == e.FullPath).FirstOrDefault();
-                    changedFile.Parent.Children.Remove(duplicat!);
+                    var duplicat = changedFile.Parent!.Children?.Where(x => x.Path == e.FullPath).FirstOrDefault();
+                    changedFile.Parent.Children?.Remove(duplicat!);
                     changedFile.Path = e.FullPath;
                     changedFile.Name = Path.GetFileName(e.FullPath);
                     if (Directory.Exists(changedFile.Path))

@@ -1,11 +1,5 @@
-﻿using Avalonia.Controls.Shapes;
-using Avalonia.Threading;
-using AvaloniaApplication1.ViewModels;
-using ReactiveUI;
-using System;
-using System.Collections.Generic;
+﻿using ReactiveUI;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 
@@ -33,7 +27,7 @@ namespace AvaloniaApplication1.Models
                 {
                     Task.Run(() =>
                     {
-                        foreach (var child in Children)
+                        foreach (var child in Children!)
                         {
                             child.IsChecked = value;
                         }
